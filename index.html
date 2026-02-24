@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Connaître les biens vendus dans mon secteur</title>
 
 <!-- Leaflet (carte OpenStreetMap) -->
@@ -19,103 +19,85 @@
     --accent:#2563eb;
     --accent2:#7c3aed;
     --shadow: 0 10px 25px rgba(17,24,39,.08);
-    --radius: 14px;
+    --radius: 16px;
   }
-  *{ box-sizing: border-box; }
-
+  *{ box-sizing:border-box; }
   body{
     margin:0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-    background: var(--bg);
-    color: var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
   }
 
+  /* ✅ prend toute la largeur disponible dans l’iframe */
   .wrap{
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 22px 16px 44px;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 22px 18px 44px;
   }
 
   .hero{
-    background: linear-gradient(135deg, rgba(37,99,235,.10), rgba(124,58,237,.08));
+    background: linear-gradient(135deg, rgba(37,99,235,.12), rgba(124,58,237,.10));
     border: 1px solid var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
-    padding: 18px;
+    padding: 18px 18px;
   }
 
-  h1{
-    margin: 0 0 6px 0;
-    font-size: 28px;
-  }
-  .subtitle{
-    margin: 0;
-    color: var(--muted);
-    line-height: 1.35;
-  }
+  h1{ margin:0 0 8px 0; font-size:32px; }
+  .subtitle{ margin:0; color:var(--muted); line-height:1.45; font-size:15px; }
 
   .card{
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 16px;
-    margin-top: 16px;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:18px;
+    margin-top:16px;
   }
-  .card h2{
-    margin: 0 0 12px 0;
-    font-size: 16px;
-  }
+  .card h2{ margin:0 0 12px 0; font-size:18px; }
 
-  .hint{
-    color: var(--muted);
-    font-size: 13px;
-    line-height: 1.35;
-  }
+  .hint{ color:var(--muted); font-size:13px; line-height:1.45; }
 
   .row{
     display:grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    gap: 14px;
   }
-  @media (max-width: 620px){
+  @media (max-width: 760px){
     .row{ grid-template-columns: 1fr; }
   }
 
-  label{
-    display:block;
-    font-size: 13px;
-    color: var(--muted);
-    margin-bottom: 6px;
-  }
-
+  label{ display:block; font-size:13px; color:var(--muted); margin-bottom:6px; }
   input, select{
     width:100%;
-    padding: 10px 10px;
+    padding: 12px 12px;
     border-radius: 12px;
-    border: 1px solid var(--border);
-    background: #fff;
-    color: var(--text);
-    outline: none;
+    border:1px solid var(--border);
+    background:#fff;
+    color:var(--text);
+    outline:none;
+    font-size: 15px; /* ✅ plus gros */
   }
   input:focus, select:focus{
     border-color: rgba(37,99,235,.55);
     box-shadow: 0 0 0 4px rgba(37,99,235,.10);
   }
 
-  button{
-    width: 100%;
-    padding: 12px 14px;
+  button.primary{
+    width:100%;
+    padding: 13px 14px;
     border-radius: 12px;
-    border: 0;
+    border:0;
     cursor:pointer;
-    color: #fff;
-    font-weight: 800;
+    color:#fff;
+    font-weight:900;
     background: linear-gradient(90deg, var(--accent), var(--accent2));
     box-shadow: 0 10px 20px rgba(37,99,235,.15);
-    margin-top: 12px;
+    margin-top: 14px;
+    font-size: 15px;
   }
-  button:active{ transform: translateY(1px); }
 
   .badges{
     display:grid;
@@ -123,7 +105,7 @@
     gap: 10px;
     margin-top: 10px;
   }
-  @media (max-width: 620px){
+  @media (max-width: 760px){
     .badges{ grid-template-columns: 1fr; }
   }
   .pill{
@@ -132,26 +114,23 @@
     justify-content:center;
     padding: 9px 10px;
     border-radius: 999px;
-    background: #f3f4f6;
-    border: 1px solid var(--border);
-    color: var(--muted);
+    background:#f3f4f6;
+    border:1px solid var(--border);
+    color:var(--muted);
     font-size: 12px;
-    text-align: center;
+    text-align:center;
   }
   .ok{ color:#059669; }
   .warn{ color:#b45309; }
 
   .resultTitle{
     display:flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 12px;
-    flex-wrap: wrap;
+    justify-content:space-between;
+    align-items:baseline;
+    gap: 10px;
+    flex-wrap:wrap;
   }
-  .meta{
-    color: var(--muted);
-    font-size: 13px;
-  }
+  .meta{ color:var(--muted); font-size:13px; }
 
   .kpis{
     display:grid;
@@ -159,25 +138,25 @@
     gap: 10px;
     margin-top: 12px;
   }
-  @media (max-width: 980px){
+  @media (max-width: 1050px){
     .kpis{ grid-template-columns: repeat(2, 1fr); }
   }
   .kpi{
-    border: 1px solid var(--border);
+    border:1px solid var(--border);
     border-radius: 14px;
     padding: 12px;
-    background: #fafafa;
+    background:#fafafa;
   }
-  .kpi .label{ color: var(--muted); font-size: 12px; margin-bottom: 6px; }
-  .kpi .value{ font-size: 18px; font-weight: 900; }
-  .kpi .sub{ font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .kpi .label{ color:var(--muted); font-size:12px; margin-bottom:6px; }
+  .kpi .value{ font-size:20px; font-weight:950; }
+  .kpi .sub{ font-size:12px; color:var(--muted); margin-top:4px; }
 
   #map{
     margin-top: 12px;
-    height: 320px;
-    border: 1px solid var(--border);
+    height: 360px; /* ✅ plus grand */
+    border:1px solid var(--border);
     border-radius: 14px;
-    overflow: hidden;
+    overflow:hidden;
     display:none;
   }
 
@@ -189,80 +168,71 @@
     max-width: 100%;
   }
   table{
-    width: 100%;
-    border-collapse: collapse;
-    background: #fff;
-    min-width: 860px;
+    width:100%;
+    border-collapse:collapse;
+    background:#fff;
+    min-width: 980px; /* garde lisibilité */
   }
   th, td{
     padding: 10px 10px;
-    border-bottom: 1px solid var(--border);
+    border-bottom:1px solid var(--border);
     text-align:left;
     font-size: 13px;
     white-space: nowrap;
   }
   th{
-    color: var(--muted);
-    font-weight: 800;
-    background: #f9fafb;
+    color:var(--muted);
+    font-weight:900;
+    background:#f9fafb;
     position: sticky;
     top: 0;
     z-index: 2;
   }
-  tr:hover td{ background: #f3f4f6; }
+  tr:hover td{ background:#f3f4f6; }
 
-  .footerNote{
+  /* ✅ Bloc CTA */
+  .cta{
+    display:flex;
+    gap: 14px;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    padding: 16px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    background: linear-gradient(135deg, rgba(37,99,235,.08), rgba(124,58,237,.06));
+  }
+  .cta h3{ margin: 0 0 6px 0; font-size: 18px; }
+  .cta p{ margin:0; color:var(--muted); font-size: 13px; line-height: 1.4; }
+  .ctaActions{
+    display:flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding: 11px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background:#fff;
+    color: var(--text);
+    text-decoration:none;
+    font-weight: 900;
+    font-size: 14px;
+  }
+  .btnPrimary{
+    border:0;
+    color:#fff;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+
+  .rgpd{
     margin-top: 10px;
     color: var(--muted);
     font-size: 12px;
-    line-height: 1.35;
-  }
-
-  /* ✅ Bloc cases à cocher (esthétique) */
-  .chips{
-    display:flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-  .chip{
-    display:inline-flex;
-    align-items:center;
-    gap: 8px;
-    padding: 9px 12px;
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    background: #fff;
-    cursor: pointer;
-    user-select: none;
-    transition: transform .05s ease, box-shadow .15s ease, border-color .15s ease;
-  }
-  .chip:hover{
-    border-color: rgba(37,99,235,.35);
-    box-shadow: 0 8px 18px rgba(17,24,39,.06);
-  }
-  .chip:active{ transform: translateY(1px); }
-  .chip input{
-    width: 16px;
-    height: 16px;
-    margin: 0;
-    accent-color: var(--accent);
-    cursor: pointer;
-  }
-  .chip span{
-    font-size: 13px;
-    color: var(--text);
-    font-weight: 700;
-  }
-  .chip small{
-    font-size: 12px;
-    color: var(--muted);
-    font-weight: 600;
-  }
-
-  /* “Peu importe” un peu mis en avant */
-  .chip.any{
-    background: linear-gradient(135deg, rgba(37,99,235,.08), rgba(124,58,237,.06));
-    border-color: rgba(37,99,235,.25);
+    line-height: 1.45;
   }
 </style>
 </head>
@@ -285,17 +255,17 @@
         <div class="row">
           <div>
             <label for="adresse">Adresse</label>
-            <input type="text" id="adresse" placeholder="Ex : 52 avenue Gambetta" required>
+            <input id="adresse" type="text" placeholder="Ex : 52 avenue Gambetta" required>
           </div>
           <div>
             <label for="cp">Code postal</label>
-            <input type="text" id="cp" placeholder="Ex : 83400" required>
+            <input id="cp" type="text" placeholder="Ex : 83400" required>
           </div>
         </div>
 
         <div style="margin-top:12px;">
           <label for="ville">Ville</label>
-          <input type="text" id="ville" placeholder="Ex : Hyères" required>
+          <input id="ville" type="text" placeholder="Ex : Hyères" required>
         </div>
 
         <div class="row" style="margin-top:12px;">
@@ -311,7 +281,6 @@
             <select id="rayon">
               <option value="0.1">100 m</option>
               <option value="0.3">300 m</option>
-              <option value="0.5">500 m</option>
               <option value="1" selected>1 km</option>
               <option value="2">2 km</option>
               <option value="3">3 km</option>
@@ -322,59 +291,31 @@
         <div class="row" style="margin-top:12px;">
           <div>
             <label for="surface">Surface habitable (m²)</label>
-            <input type="number" id="surface" min="10" placeholder="Ex : 80" required>
+            <input id="surface" type="number" min="10" placeholder="Ex : 80" required>
           </div>
-
           <div>
-            <label>Nombre de pièces principales</label>
-            <div class="chips" id="piecesChips">
-              <label class="chip any">
-                <input type="checkbox" class="pieceAny" checked>
-                <span>Peu importe</span>
-                <small> (recommandé)</small>
-              </label>
-
-              <label class="chip">
-                <input type="checkbox" class="pieceOpt" value="1">
-                <span>1</span><small> pièce</small>
-              </label>
-              <label class="chip">
-                <input type="checkbox" class="pieceOpt" value="2">
-                <span>2</span><small> pièces</small>
-              </label>
-              <label class="chip">
-                <input type="checkbox" class="pieceOpt" value="3">
-                <span>3</span><small> pièces</small>
-              </label>
-              <label class="chip">
-                <input type="checkbox" class="pieceOpt" value="4">
-                <span>4</span><small> pièces</small>
-              </label>
-              <label class="chip">
-                <input type="checkbox" class="pieceOpt" value="5">
-                <span>5</span><small> pièces</small>
-              </label>
-              <label class="chip">
-                <input type="checkbox" class="pieceOpt" value="6">
-                <span>6+</span><small> pièces</small>
-              </label>
-            </div>
-
-            <p class="hint" style="margin-top:8px;">
-              Exemple : cochez <b>2</b>, puis ajoutez <b>3</b> et <b>4</b> si vous voulez élargir la recherche.
-            </p>
+            <label for="pieces">Nombre de pièces principales</label>
+            <select id="pieces">
+              <option value="">Peu importe</option>
+              <option value="1">1 pièce</option>
+              <option value="2">2 pièces</option>
+              <option value="3">3 pièces</option>
+              <option value="4">4 pièces</option>
+              <option value="5">5 pièces</option>
+              <option value="6">6 pièces et +</option>
+            </select>
           </div>
         </div>
 
         <div style="margin-top:12px;">
           <label for="terrain">Surface terrain (m²) (uniquement si maison)</label>
-          <input type="number" id="terrain" min="0" placeholder="Ex : 300">
+          <input id="terrain" type="number" min="0" placeholder="Ex : 300">
         </div>
 
-        <button type="submit">Voir les ventes comparables</button>
+        <button class="primary" type="submit">Voir les ventes comparables</button>
 
         <div class="badges">
-          <div class="pill">Surface ±15% • Terrain ±25% (si maison)</div>
+          <div class="pill">Surface ±15% • Terrain ±20% (si maison)</div>
           <div id="dataBadge" class="pill warn">Chargement des données…</div>
         </div>
 
@@ -397,8 +338,24 @@
 
       <div id="map"></div>
 
-      <div class="footerNote">
-        Résultat indicatif basé sur des ventes publiques. Pour une estimation précise, contactez Attraction Immobilière.
+      <!-- ✅ CTA + RGPD -->
+      <div style="margin-top:16px;">
+        <div class="cta">
+          <div>
+            <h3>Envie d’une estimation précise ?</h3>
+            <p>Contactez <b>Nathalie Chauvin</b> (Attraction Immobilière) pour une analyse complète et une stratégie de vente.</p>
+          </div>
+          <div class="ctaActions">
+            <a class="btn btnPrimary" href="tel:+33778769838">📞 Appeler Nathalie</a>
+            <a class="btn" href="https://attraction-immobiliere.com/contactez-lagence/" target="_blank" rel="noopener">✉️ Demander un rendez-vous</a>
+          </div>
+        </div>
+
+        <div class="rgpd">
+          <b>RGPD / Confidentialité :</b> ce simulateur ne stocke aucune information. Les calculs sont effectués localement dans votre navigateur.
+          Pour localiser l’adresse, une requête est envoyée au service public <i>api-adresse.data.gouv.fr</i>.
+          Résultats indicatifs basés sur des ventes publiques (DVF).
+        </div>
       </div>
     </div>
 
