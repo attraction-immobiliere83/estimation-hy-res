@@ -1,22 +1,17 @@
 let ventes = [];
 
-// --- Réglages ---
 const CSV_FILE = 'dvf_light.csv';
 const SURFACE_TOL = 0.15;
-const TERRAIN_TOL = 0.25;
+const TERRAIN_TOL = 0.20;
 
-// Anti-aberrations internes
 const PRIX_M2_MIN = 800;
 const PRIX_M2_MAX = 12000;
 
-// Plafonds prix par type
 const PRIX_MAX_APPART = 2000000;
 const PRIX_MAX_MAISON = 5000000;
 
-// ventes après 01/01/2023
 const DATE_MIN = new Date('2023-01-01T00:00:00');
 
-// --- Helpers ---
 function normalizeHeader(s) {
   return (s || "")
     .toString()
@@ -34,13 +29,10 @@ function toNumberFR(x) {
 function parseDateSmart(s) {
   if (!s) return null;
   const t = s.trim();
-
   const m1 = t.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (m1) return new Date(`${m1[1]}-${m1[2]}-${m1[3]}T00:00:00`);
-
   const m2 = t.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
   if (m2) return new Date(`${m2[3]}-${m2[2]}-${m2[1]}T00:00:00`);
-
   const d = new Date(t);
   return isNaN(d.getTime()) ? null : d;
 }
@@ -89,12 +81,7 @@ function dedupeComparables(list) {
   const seen = new Set();
   const out = [];
   for (const v of list) {
-    const key = [
-      v.dateRaw || "",
-      v.adresse || "",
-      Math.round(v.prix || 0),
-      Math.round(v.surface || 0)
-    ].join("|");
+    const key = [v.dateRaw || "", v.adresse || "", Math.round(v.prix || 0), Math.round(v.surface || 0)].join("|");
     if (seen.has(key)) continue;
     seen.add(key);
     out.push(v);
@@ -103,98 +90,32 @@ function dedupeComparables(list) {
 }
 function cleanComparables(list, type) {
   const prixMax = (type === "Appartement") ? PRIX_MAX_APPART : PRIX_MAX_MAISON;
-
   return list.filter(v => {
     if (!isFinite(v.prix) || !isFinite(v.surface)) return false;
     if (v.prix > prixMax) return false;
-
     const pm2 = v.prix / v.surface;
     if (!isFinite(pm2)) return false;
     if (pm2 < PRIX_M2_MIN || pm2 > PRIX_M2_MAX) return false;
-
     return true;
   });
 }
 
-// --- Affichage erreurs dans la zone résultats ---
-function showErrorInResults(err) {
-  console.error(err);
-  const zone = document.getElementById('resultats');
-  const mapDiv = document.getElementById('map');
-  const meta = document.getElementById('meta');
-
-  if (meta) meta.textContent = "";
-  if (mapDiv) mapDiv.style.display = "none";
-  if (zone) {
-    zone.innerHTML = `
-      <p class="hint">
-        ⚠️ Une erreur JavaScript a empêché l'affichage des résultats.<br>
-        Ouvre la console (F12) pour voir le détail.<br>
-        <span style="color:#b91c1c;font-weight:800;">${(err && err.message) ? err.message : String(err)}</span>
-      </p>
-    `;
-  }
-}
-
-// --- Gestion checkboxes pièces ---
-function setupPiecesUI() {
-  const any = document.querySelector('.pieceAny');
-  const opts = Array.from(document.querySelectorAll('.pieceOpt'));
-  if (!any || opts.length === 0) return;
-
-  // Si aucune option cochée -> any actif
-  if (!opts.some(o => o.checked)) any.checked = true;
-
-  any.addEventListener('change', () => {
-    if (any.checked) {
-      for (const o of opts) o.checked = false;
-    } else {
-      if (!opts.some(o => o.checked)) any.checked = true;
-    }
-  });
-
-  for (const o of opts) {
-    o.addEventListener('change', () => {
-      if (o.checked) {
-        any.checked = false;
-      } else {
-        if (!opts.some(x => x.checked)) any.checked = true;
-      }
-    });
-  }
-}
-
-function getPiecesSelected() {
-  const any = document.querySelector('.pieceAny');
-  const opts = Array.from(document.querySelectorAll('.pieceOpt'));
-  const selected = opts
-    .filter(o => o.checked)
-    .map(o => parseInt(o.value, 10))
-    .filter(n => Number.isInteger(n));
-  const isAny = any ? any.checked : true;
-  return { isAny, selected };
-}
-
-// --- Carte Leaflet ---
+/* --- Carte --- */
 let map = null;
 let layerGroup = null;
-
 function ensureMap() {
   const mapDiv = document.getElementById('map');
   mapDiv.style.display = 'block';
-
   if (!map) {
     map = L.map('map', { scrollWheelZoom: true });
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap'
     }).addTo(map);
-
     layerGroup = L.layerGroup().addTo(map);
   }
 }
-
-function updateMap(subjectLat, subjectLon, rayonKm, points, showTerrain) {
+function updateMap(subjectLat, subjectLon, rayonKm, points) {
   ensureMap();
   layerGroup.clearLayers();
 
@@ -219,15 +140,9 @@ function updateMap(subjectLat, subjectLon, rayonKm, points, showTerrain) {
   }).addTo(layerGroup);
 
   const pts = points.slice(0, 120);
-
   for (const p of pts) {
     const distM = Math.round((p.dist || 0) * 1000);
     const pm2 = p.prix / p.surface;
-
-    const terrainLine = (showTerrain && isFinite(p.surface_terrain))
-      ? `<br>Terrain : ${formatInt(p.surface_terrain)} m²`
-      : "";
-
     L.circleMarker([p.lat, p.lng], {
       radius: 6,
       color: "#dc2626",
@@ -239,7 +154,7 @@ function updateMap(subjectLat, subjectLon, rayonKm, points, showTerrain) {
     .bindPopup(`
       <b>${p.adresse}</b><br>
       ${p.dateRaw || "-"}<br>
-      ${formatEuro(p.prix)} • ${formatInt(p.surface)} m²${terrainLine} • ${formatM2(pm2)}<br>
+      ${formatEuro(p.prix)} • ${formatInt(p.surface)} m² • ${formatM2(pm2)}<br>
       Distance : ${distM} m
     `);
   }
@@ -248,7 +163,7 @@ function updateMap(subjectLat, subjectLon, rayonKm, points, showTerrain) {
   map.fitBounds(L.latLngBounds(latlngs).pad(0.22));
 }
 
-// --- Chargement CSV ---
+/* --- Chargement CSV --- */
 const dataBadge = document.getElementById('dataBadge');
 
 fetch(CSV_FILE)
@@ -271,19 +186,19 @@ fetch(CSV_FILE)
       return -1;
     };
 
-    const iPrix = idx(["valeur fonciere", "valeur_fonciere", "prix"]);
-    const iType = idx(["type local", "type_local", "type"]);
-    const iSurf = idx(["surface reelle bati", "surface_reelle_bati", "surface habitable", "surface_habitable"]);
-    const iPieces = idx(["nombre pieces principales", "nombre_pieces_principales", "pieces", "nb pieces principales"]);
-    const iTerr = idx(["surface terrain", "surface_terrain"]);
-    const iLat  = idx(["latitude", "lat"]);
-    const iLng  = idx(["longitude", "lon", "lng"]);
+    const iPrix = idx(["valeur fonciere","valeur_fonciere","prix"]);
+    const iType = idx(["type local","type_local","type"]);
+    const iSurf = idx(["surface reelle bati","surface_reelle_bati","surface habitable","surface_habitable"]);
+    const iPieces = idx(["nombre pieces principales","nombre_pieces_principales","pieces"]);
+    const iTerr = idx(["surface terrain","surface_terrain"]);
+    const iLat  = idx(["latitude","lat"]);
+    const iLng  = idx(["longitude","lon","lng"]);
 
-    const iNum = idx(["adresse numero", "adresse_numero", "numero"]);
-    const iVoie = idx(["adresse nom de voie", "adresse_nom_de_voie", "voie"]);
-    const iCP = idx(["code postal", "code_postal", "cp"]);
-    const iVille = idx(["nom commune", "nom_commune", "commune", "ville"]);
-    const iDate = idx(["date mutation", "date_mutation", "date"]);
+    const iNum = idx(["adresse numero","adresse_numero","numero"]);
+    const iVoie = idx(["adresse nom de voie","adresse_nom_de_voie","voie"]);
+    const iCP = idx(["code postal","code_postal","cp"]);
+    const iVille = idx(["nom commune","nom_commune","commune","ville"]);
+    const iDate = idx(["date mutation","date_mutation","date"]);
 
     if ([iPrix, iType, iSurf, iLat, iLng].some(i => i === -1)) {
       throw new Error("Colonnes indispensables introuvables (prix/type/surface/lat/lng).");
@@ -299,8 +214,14 @@ fetch(CSV_FILE)
       const dateRaw = iDate !== -1 ? (cols[iDate] || "").trim() : "";
       const dateObj = parseDateSmart(dateRaw);
 
+      // ✅ si la voie est vide, on indique “adresse partielle”
       const adresseRue = `${num} ${voie}`.trim();
-      const full = `${adresseRue}${cp ? `, ${cp}` : ""}${ville ? ` ${ville}` : ""}`.trim();
+      let full = `${adresseRue}${cp ? `, ${cp}` : ""}${ville ? ` ${ville}` : ""}`.trim();
+      if (!voie) {
+        // Exemple: "65 - 83320 Carqueiranne (adresse partielle)"
+        const base = `${num || ""}${cp ? `, ${cp}` : ""}${ville ? ` ${ville}` : ""}`.trim();
+        full = `${base} (adresse partielle)`.trim();
+      }
 
       return {
         prix: toNumberFR(cols[iPrix]),
@@ -326,243 +247,187 @@ fetch(CSV_FILE)
     dataBadge.classList.add('warn');
   });
 
-// --- Démarrage après DOM chargé ---
-document.addEventListener('DOMContentLoaded', () => {
-  setupPiecesUI();
+/* --- Estimation --- */
+document.getElementById('formEstimation').addEventListener('submit', async function (e) {
+  e.preventDefault();
 
-  const form = document.getElementById('formEstimation');
-  if (!form) return;
+  const adresse = document.getElementById('adresse').value.trim();
+  const cp = document.getElementById('cp').value.trim();
+  const ville = document.getElementById('ville').value.trim();
 
-  form.addEventListener('submit', async function (e) {
-    e.preventDefault();
+  const type = document.getElementById('type').value.trim();
+  const surface = parseFloat(document.getElementById('surface').value);
+  const piecesChoix = document.getElementById('pieces').value;
+  const terrain = parseFloat(document.getElementById('terrain').value || "0");
+  const rayonKm = parseFloat(document.getElementById('rayon').value);
 
-    try {
-      const adresse = document.getElementById('adresse').value.trim();
-      const cp = document.getElementById('cp').value.trim();
-      const ville = document.getElementById('ville').value.trim();
+  const zone = document.getElementById('resultats');
+  const meta = document.getElementById('meta');
+  const mapDiv = document.getElementById('map');
 
-      const type = document.getElementById('type').value.trim();
-      const surface = parseFloat(document.getElementById('surface').value);
+  if (!ventes || ventes.length === 0) {
+    zone.innerHTML = `<p class="hint">Les données sont en cours de chargement. Attends 2–3 secondes et réessaie.</p>`;
+    return;
+  }
+  if (!adresse || !cp || !ville || !isFinite(surface) || surface <= 0) {
+    zone.innerHTML = `<p class="hint">Merci de remplir : adresse + code postal + ville + surface.</p>`;
+    return;
+  }
 
-      const { isAny: piecesAny, selected: piecesSelected } = getPiecesSelected();
-      const filtrerPieces = (!piecesAny && piecesSelected.length > 0);
+  // Géocodage BAN
+  const query = `${adresse} ${cp} ${ville}`;
+  const url = `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(query)}&limit=1`;
+  const geoResp = await fetch(url);
+  const geoData = await geoResp.json();
 
-      const terrain = parseFloat(document.getElementById('terrain').value || "0");
-      const rayonKm = parseFloat(document.getElementById('rayon').value);
+  if (!geoData.features || geoData.features.length === 0) {
+    mapDiv.style.display = "none";
+    zone.innerHTML = `<p class="hint">Adresse introuvable. Vérifie l’adresse, le code postal et la ville.</p>`;
+    return;
+  }
 
-      const zone = document.getElementById('resultats');
-      const meta = document.getElementById('meta');
-      const mapDiv = document.getElementById('map');
+  const lon = geoData.features[0].geometry.coordinates[0];
+  const lat = geoData.features[0].geometry.coordinates[1];
 
-      if (!ventes || ventes.length === 0) {
-        zone.innerHTML = `<p class="hint">Les données sont en cours de chargement. Attends 2–3 secondes et réessaie.</p>`;
-        return;
-      }
-      if (!adresse || !cp || !ville || !isFinite(surface) || surface <= 0) {
-        zone.innerHTML = `<p class="hint">Merci de remplir : adresse + code postal + ville + surface.</p>`;
-        return;
-      }
+  const surfaceMin = surface * (1 - SURFACE_TOL);
+  const surfaceMax = surface * (1 + SURFACE_TOL);
 
-      // Géocodage BAN
-      const query = `${adresse} ${cp} ${ville}`;
-      const url = `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(query)}&limit=1`;
-      const geoResp = await fetch(url);
-      const geoData = await geoResp.json();
+  const filtrerTerrain = (type === "Maison" && isFinite(terrain) && terrain > 0);
+  const terrainMin = terrain * (1 - TERRAIN_TOL);
+  const terrainMax = terrain * (1 + TERRAIN_TOL);
 
-      if (!geoData.features || geoData.features.length === 0) {
-        mapDiv.style.display = "none";
-        zone.innerHTML = `<p class="hint">Adresse introuvable. Vérifie l’adresse, le code postal et la ville.</p>`;
-        return;
-      }
+  const filtrerPieces = piecesChoix !== "";
+  const piecesMin = filtrerPieces ? parseInt(piecesChoix, 10) : null;
 
-      const lon = geoData.features[0].geometry.coordinates[0];
-      const lat = geoData.features[0].geometry.coordinates[1];
+  let comps = [];
+  for (const v of ventes) {
+    if (v.type !== type) continue;
+    if (!isFinite(v.prix) || !isFinite(v.surface) || !isFinite(v.lat) || !isFinite(v.lng)) continue;
+    if (!(v.dateObj && v.dateObj >= DATE_MIN)) continue;
+    if (v.surface < surfaceMin || v.surface > surfaceMax) continue;
 
-      const surfaceMin = surface * (1 - SURFACE_TOL);
-      const surfaceMax = surface * (1 + SURFACE_TOL);
-
-      const filtrerTerrain = (type === "Maison" && isFinite(terrain) && terrain > 0);
-      const terrainMin = terrain * (1 - TERRAIN_TOL);
-      const terrainMax = terrain * (1 + TERRAIN_TOL);
-
-      let comps = [];
-
-      for (const v of ventes) {
-        if (v.type !== type) continue;
-        if (!isFinite(v.prix) || !isFinite(v.surface) || !isFinite(v.lat) || !isFinite(v.lng)) continue;
-        if (!(v.dateObj && v.dateObj >= DATE_MIN)) continue;
-
-        if (v.surface < surfaceMin || v.surface > surfaceMax) continue;
-
-        if (filtrerTerrain) {
-          if (!isFinite(v.surface_terrain)) continue;
-          if (v.surface_terrain < terrainMin || v.surface_terrain > terrainMax) continue;
-        }
-
-        if (filtrerPieces) {
-          if (!isFinite(v.pieces)) continue;
-
-          const wants6plus = piecesSelected.includes(6);
-          const okPieces = wants6plus
-            ? (piecesSelected.includes(Math.round(v.pieces)) || v.pieces >= 6)
-            : piecesSelected.includes(Math.round(v.pieces));
-
-          if (!okPieces) continue;
-        }
-
-        const d = distanceKm(lat, lon, v.lat, v.lng);
-        if (d <= rayonKm) comps.push({ ...v, dist: d });
-      }
-
-      comps = dedupeComparables(comps);
-      comps = cleanComparables(comps, type);
-
-      if (comps.length === 0) {
-        meta.textContent = "";
-        mapDiv.style.display = "none";
-        zone.innerHTML = `<p class="hint">Aucune vente comparable trouvée (après 01/01/2023). Essaie d’augmenter le rayon ou d’élargir les pièces (ex : 2 + 3 + 4).</p>`;
-        return;
-      }
-
-      // Tri : surface d’abord, puis proximité pièces (léger), puis distance
-      const scoreComparable = (v) => {
-        const surfaceDiff = Math.abs(v.surface - surface) / surface;
-
-        let piecesPenalty = 0;
-        if (filtrerPieces && isFinite(v.pieces)) {
-          const wants6plus = piecesSelected.includes(6);
-          if (wants6plus && v.pieces >= 6) {
-            piecesPenalty = 0;
-          } else {
-            const diffs = piecesSelected.map(p => Math.abs(v.pieces - p));
-            const minDiff = diffs.length ? Math.min(...diffs) : 0;
-            piecesPenalty = 0.02 * Math.min(minDiff, 4);
-          }
-        }
-
-        const distPenalty = Math.min((v.dist || 0) / Math.max(rayonKm, 0.1), 1) * 0.02;
-        return surfaceDiff + piecesPenalty + distPenalty;
-      };
-
-      comps = comps
-        .map(v => ({ ...v, _score: scoreComparable(v) }))
-        .sort((a, b) => (a._score - b._score) || (a.dist - b.dist));
-
-      const top = comps.slice(0, 20);
-
-      const prixM2 = comps.map(v => v.prix / v.surface).filter(x => isFinite(x));
-      const moyenneM2 = prixM2.reduce((a, b) => a + b, 0) / prixM2.length;
-      const medianeM2 = mediane(prixM2);
-      const basM2 = percentile(prixM2, 0.10);
-      const hautM2 = percentile(prixM2, 0.90);
-
-      const estBasse = basM2 * surface;
-      const estMoy = moyenneM2 * surface;
-      const estMed = medianeM2 * surface;
-      const estHaute = hautM2 * surface;
-
-      const piecesTexte = filtrerPieces
-        ? piecesSelected.map(p => (p === 6 ? "6+" : String(p))).join(", ")
-        : "peu importe";
-
-      const terrainTexte = filtrerTerrain
-        ? ` • Terrain ${Math.round(terrainMin)}–${Math.round(terrainMax)} m²`
-        : "";
-
-      meta.textContent =
-        `${type} • Rayon ${rayonKm} km • Surface ${Math.round(surfaceMin)}–${Math.round(surfaceMax)} m² • Pièces ${piecesTexte}${terrainTexte} • Après 01/01/2023`;
-
-      const showTerrainColumn = (type === "Maison" && filtrerTerrain);
-
-      const terrainHeader = showTerrainColumn ? `<th>Terrain</th>` : "";
-      const terrainCell = (v) => showTerrainColumn
-        ? `<td>${isFinite(v.surface_terrain) ? formatInt(v.surface_terrain) : "-"}</td>`
-        : "";
-
-      const rows = top.map(v => {
-        const pm2 = v.prix / v.surface;
-        const distM = Math.round(v.dist * 1000);
-        return `
-          <tr>
-            <td>${v.dateRaw || "-"}</td>
-            <td title="${v.adresse}">${v.adresse}</td>
-            <td>${formatInt(v.surface)}</td>
-            ${terrainCell(v)}
-            <td>${isFinite(v.pieces) ? v.pieces : "-"}</td>
-            <td>${formatEuro(v.prix)}</td>
-            <td>${formatM2(pm2)}</td>
-            <td>${distM} m</td>
-          </tr>
-        `;
-      }).join("");
-
-      zone.innerHTML = `
-        <div class="kpis">
-          <div class="kpi">
-            <div class="label">Ventes comparables</div>
-            <div class="value">${formatInt(comps.length)}</div>
-            <div class="sub">Après 01/01/2023</div>
-          </div>
-          <div class="kpi">
-            <div class="label">Prix moyen (au m²)</div>
-            <div class="value">${formatM2(moyenneM2)}</div>
-          </div>
-          <div class="kpi">
-            <div class="label">Prix médian (au m²)</div>
-            <div class="value">${formatM2(medianeM2)}</div>
-          </div>
-          <div class="kpi">
-            <div class="label">Fourchette de marché</div>
-            <div class="value">${formatM2(basM2)} → ${formatM2(hautM2)}</div>
-            <div class="sub">Bas/haut (10% → 90%)</div>
-          </div>
-        </div>
-
-        <div class="kpis" style="margin-top:12px;">
-          <div class="kpi">
-            <div class="label">Estimation basse</div>
-            <div class="value">${formatEuro(estBasse)}</div>
-            <div class="sub">Calcul : ${formatM2(basM2)}</div>
-          </div>
-          <div class="kpi">
-            <div class="label">Estimation moyenne</div>
-            <div class="value">${formatEuro(estMoy)}</div>
-            <div class="sub">Calcul : ${formatM2(moyenneM2)}</div>
-          </div>
-          <div class="kpi">
-            <div class="label">Estimation médiane</div>
-            <div class="value">${formatEuro(estMed)}</div>
-            <div class="sub">Calcul : ${formatM2(medianeM2)}</div>
-          </div>
-          <div class="kpi">
-            <div class="label">Estimation haute</div>
-            <div class="value">${formatEuro(estHaute)}</div>
-            <div class="sub">Calcul : ${formatM2(hautM2)}</div>
-          </div>
-        </div>
-
-        <div class="tableWrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Adresse (n° + rue, CP, ville)</th>
-                <th>Surface</th>
-                ${terrainHeader}
-                <th>Pièces</th>
-                <th>Prix vendu</th>
-                <th>Prix / m²</th>
-                <th>Distance</th>
-              </tr>
-            </thead>
-            <tbody>${rows}</tbody>
-          </table>
-        </div>
-      `;
-
-      updateMap(lat, lon, rayonKm, comps, showTerrainColumn);
-    } catch (err) {
-      showErrorInResults(err);
+    if (filtrerTerrain) {
+      if (!isFinite(v.surface_terrain)) continue;
+      if (v.surface_terrain < terrainMin || v.surface_terrain > terrainMax) continue;
     }
-  });
+
+    if (filtrerPieces) {
+      if (piecesMin >= 6) {
+        if (!(isFinite(v.pieces) && v.pieces >= 6)) continue;
+      } else {
+        if (!(isFinite(v.pieces) && v.pieces === piecesMin)) continue;
+      }
+    }
+
+    const d = distanceKm(lat, lon, v.lat, v.lng);
+    if (d <= rayonKm) comps.push({ ...v, dist: d });
+  }
+
+  comps = dedupeComparables(comps);
+  comps = cleanComparables(comps, type);
+
+  if (comps.length === 0) {
+    meta.textContent = "";
+    mapDiv.style.display = "none";
+    zone.innerHTML = `<p class="hint">Aucune vente comparable trouvée (après 01/01/2023). Essaie d’augmenter le rayon.</p>`;
+    return;
+  }
+
+  const prixM2 = comps.map(v => v.prix / v.surface).filter(x => isFinite(x));
+  const moyenneM2 = prixM2.reduce((a, b) => a + b, 0) / prixM2.length;
+  const medianeM2 = mediane(prixM2);
+  const basM2 = percentile(prixM2, 0.10);
+  const hautM2 = percentile(prixM2, 0.90);
+
+  const estBasse = basM2 * surface;
+  const estMoy = moyenneM2 * surface;
+  const estMed = medianeM2 * surface;
+  const estHaute = hautM2 * surface;
+
+  comps.sort((a, b) => a.dist - b.dist);
+  const top = comps.slice(0, 20);
+
+  const piecesTexte = (piecesChoix === "") ? "peu importe" : (piecesChoix === "6" ? "6 pièces et +" : `${piecesChoix} pièce(s)`);
+  meta.textContent = `${type} • Rayon ${rayonKm} km • Surface ${Math.round(surfaceMin)}–${Math.round(surfaceMax)} m² • Pièces ${piecesTexte} • Après 01/01/2023`;
+
+  const rows = top.map(v => {
+    const pm2 = v.prix / v.surface;
+    const distM = Math.round(v.dist * 1000);
+    return `
+      <tr>
+        <td>${v.dateRaw || "-"}</td>
+        <td title="${v.adresse}">${v.adresse}</td>
+        <td>${formatInt(v.surface)}</td>
+        <td>${isFinite(v.pieces) ? v.pieces : "-"}</td>
+        <td>${formatEuro(v.prix)}</td>
+        <td>${formatM2(pm2)}</td>
+        <td>${distM} m</td>
+      </tr>
+    `;
+  }).join("");
+
+  zone.innerHTML = `
+    <div class="kpis">
+      <div class="kpi">
+        <div class="label">Ventes comparables</div>
+        <div class="value">${formatInt(comps.length)}</div>
+        <div class="sub">Après 01/01/2023</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Prix moyen (au m²)</div>
+        <div class="value">${formatM2(moyenneM2)}</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Prix médian (au m²)</div>
+        <div class="value">${formatM2(medianeM2)}</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Fourchette de marché</div>
+        <div class="value">${formatM2(basM2)} → ${formatM2(hautM2)}</div>
+        <div class="sub">Bas/haut (10% → 90%)</div>
+      </div>
+    </div>
+
+    <div class="kpis" style="margin-top:12px;">
+      <div class="kpi">
+        <div class="label">Estimation basse</div>
+        <div class="value">${formatEuro(estBasse)}</div>
+        <div class="sub">Calcul : ${formatM2(basM2)}</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Estimation moyenne</div>
+        <div class="value">${formatEuro(estMoy)}</div>
+        <div class="sub">Calcul : ${formatM2(moyenneM2)}</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Estimation médiane</div>
+        <div class="value">${formatEuro(estMed)}</div>
+        <div class="sub">Calcul : ${formatM2(medianeM2)}</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Estimation haute</div>
+        <div class="value">${formatEuro(estHaute)}</div>
+        <div class="sub">Calcul : ${formatM2(hautM2)}</div>
+      </div>
+    </div>
+
+    <div class="tableWrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Adresse (n° + rue, CP, ville)</th>
+            <th>Surface</th>
+            <th>Pièces</th>
+            <th>Prix vendu</th>
+            <th>Prix / m²</th>
+            <th>Distance</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+
+  updateMap(lat, lon, rayonKm, comps);
 });
