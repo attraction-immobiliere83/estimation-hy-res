@@ -169,7 +169,12 @@ const dataBadge = document.getElementById('dataBadge');
 fetch(CSV_FILE)
   .then(r => {
     if (!r.ok) throw new Error(`CSV introuvable: ${CSV_FILE} (HTTP ${r.status})`);
-    return r.text();
+    return r.arrayBuffer();
+  })
+  .then(buffer => {
+    const decoder = new TextDecoder('iso-8859-1');
+    const text = decoder.decode(buffer);
+    return text;
   })
   .then(text => {
     const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
@@ -266,6 +271,29 @@ document.getElementById('formEstimation').addEventListener('submit', async funct
   const meta = document.getElementById('meta');
   const mapDiv = document.getElementById('map');
 
+  // ── Loader animé ──────────────────────────────────────────────────────────
+  const typeLabel = type.startsWith('Local') ? 'locaux commerciaux' : (type === 'Maison' ? 'maisons' : 'appartements');
+  zone.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 16px;gap:18px;text-align:center;">
+      <div style="
+        width:48px;height:48px;
+        border:5px solid #e5e7eb;
+        border-top-color:#2563eb;
+        border-radius:50%;
+        animation:spin .8s linear infinite;
+      "></div>
+      <div>
+        <div style="font-weight:700;font-size:16px;color:#111827;">Recherche en cours…</div>
+        <div style="font-size:13px;color:#6b7280;margin-top:4px;">
+          On parcourt les ventes de ${typeLabel} dans un rayon de ${rayonKm} km
+        </div>
+      </div>
+    </div>
+    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+  `;
+  meta.textContent = "";
+  mapDiv.style.display = "none";
+
   if (!ventes || ventes.length === 0) {
     zone.innerHTML = `<p class="hint">Les données sont en cours de chargement. Attends 2–3 secondes et réessaie.</p>`;
     return;
@@ -282,7 +310,6 @@ document.getElementById('formEstimation').addEventListener('submit', async funct
   const geoData = await geoResp.json();
 
   if (!geoData.features || geoData.features.length === 0) {
-    mapDiv.style.display = "none";
     zone.innerHTML = `<p class="hint">Adresse introuvable. Vérifie l’adresse, le code postal et la ville.</p>`;
     return;
   }
