@@ -228,6 +228,32 @@
     background: linear-gradient(90deg, var(--accent), var(--accent2));
   }
 
+  /* Checkboxes pièces style pills */
+  .checkpill{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1.5px solid var(--border);
+    background:#fff;
+    color:var(--muted);
+    font-size: 13px;
+    cursor:pointer;
+    user-select:none;
+    transition: all .15s;
+    font-weight: 600;
+  }
+  .checkpill:hover{
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .checkpill.active{
+    background: linear-gradient(135deg, rgba(37,99,235,.12), rgba(124,58,237,.10));
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
   .rgpd{
     margin-top: 10px;
     color: var(--muted);
@@ -294,16 +320,19 @@
             <input id="surface" type="number" min="10" placeholder="Ex : 80" required>
           </div>
           <div>
-            <label for="pieces">Nombre de pièces principales</label>
-            <select id="pieces">
-              <option value="">Peu importe</option>
-              <option value="1">1 pièce</option>
-              <option value="2">2 pièces</option>
-              <option value="3">3 pièces</option>
-              <option value="4">4 pièces</option>
-              <option value="5">5 pièces</option>
-              <option value="6">6 pièces et +</option>
-            </select>
+            <label>Nombre de pièces principales</label>
+            <div id="piecesGroup" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:2px;">
+              <label class="checkpill active" data-val="">
+                <input type="checkbox" value="" checked hidden> Peu importe <span style="font-size:11px;color:var(--muted);">(recommandé)</span>
+              </label>
+              <label class="checkpill" data-val="1"><input type="checkbox" value="1" hidden> 1 pièce</label>
+              <label class="checkpill" data-val="2"><input type="checkbox" value="2" hidden> 2 pièces</label>
+              <label class="checkpill" data-val="3"><input type="checkbox" value="3" hidden> 3 pièces</label>
+              <label class="checkpill" data-val="4"><input type="checkbox" value="4" hidden> 4 pièces</label>
+              <label class="checkpill" data-val="5"><input type="checkbox" value="5" hidden> 5 pièces</label>
+              <label class="checkpill" data-val="6"><input type="checkbox" value="6" hidden> 6+ pièces</label>
+            </div>
+            <p style="margin:6px 0 0;font-size:12px;color:var(--muted);">Exemple : cochez <b>2</b>, puis ajoutez <b>3</b> et <b>4</b> si vous voulez élargir la recherche.</p>
           </div>
         </div>
 
@@ -347,7 +376,7 @@
           </div>
           <div class="ctaActions">
             <a class="btn btnPrimary" href="tel:+33778769838">📞 Appeler Nathalie</a>
-            <a class="btn" href="https://attraction-immobiliere.com/fr/contact" target="_blank" rel="noopener">✉️ Demander un rendez-vous</a>
+            <a class="btn" href="https://attraction-immobiliere.com/contactez-lagence/" target="_blank" rel="noopener">✉️ Demander un rendez-vous</a>
           </div>
         </div>
 
@@ -361,6 +390,44 @@
 
   </div>
 
+<script>
+// Gestion des checkboxes pièces
+document.addEventListener('DOMContentLoaded', function(){
+  const group = document.getElementById('piecesGroup');
+  const pills = group.querySelectorAll('.checkpill');
+  const peuImporte = group.querySelector('[data-val=""]');
+
+  pills.forEach(pill => {
+    pill.addEventListener('click', function(){
+      const val = this.dataset.val;
+
+      if(val === ""){
+        // Clic sur "Peu importe" → tout désélectionner sauf lui
+        pills.forEach(p => p.classList.remove('active'));
+        this.classList.add('active');
+      } else {
+        // Désélectionner "Peu importe"
+        peuImporte.classList.remove('active');
+        // Toggle ce pill
+        this.classList.toggle('active');
+        // Si plus rien de sélectionné → remettre "Peu importe"
+        const anyActive = [...pills].filter(p => p.dataset.val !== "" && p.classList.contains('active'));
+        if(anyActive.length === 0){
+          peuImporte.classList.add('active');
+        }
+      }
+    });
+  });
+});
+
+// Fonction exposée pour récupérer les pièces sélectionnées
+function getPiecesSelectionnees(){
+  const group = document.getElementById('piecesGroup');
+  const peuImporte = group.querySelector('[data-val=""].active');
+  if(peuImporte) return []; // [] = pas de filtre
+  return [...group.querySelectorAll('.checkpill.active')].map(p => p.dataset.val);
+}
+</script>
 <script src="estimation.js"></script>
 </body>
 </html>
