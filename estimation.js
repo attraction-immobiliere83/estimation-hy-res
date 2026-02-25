@@ -172,9 +172,12 @@ fetch(CSV_FILE)
     return r.arrayBuffer();
   })
   .then(buffer => {
-    const decoder = new TextDecoder('iso-8859-1');
-    const text = decoder.decode(buffer);
-    return text;
+    // Détection automatique de l'encoding : Latin-1 (DVF officiel) ou UTF-8
+    const u8 = new Uint8Array(buffer);
+    // Si le fichier commence par BOM UTF-8 (EF BB BF), on décode en UTF-8
+    const isUTF8BOM = (u8[0] === 0xEF && u8[1] === 0xBB && u8[2] === 0xBF);
+    const encoding = isUTF8BOM ? 'utf-8' : 'iso-8859-1';
+    return new TextDecoder(encoding).decode(buffer);
   })
   .then(text => {
     const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
@@ -248,7 +251,7 @@ fetch(CSV_FILE)
   })
   .catch(err => {
     console.error(err);
-    dataBadge.textContent = `Erreur chargement données`;
+    dataBadge.textContent = `Erreur : ${err.message}`;
     dataBadge.classList.add('warn');
   });
 
