@@ -293,16 +293,21 @@ document.getElementById('formEstimation').addEventListener('submit', async funct
   const surfaceMin = surface * (1 - SURFACE_TOL);
   const surfaceMax = surface * (1 + SURFACE_TOL);
 
+  const isLocal = type.startsWith("Local");
+
   const filtrerTerrain = (type === "Maison" && isFinite(terrain) && terrain > 0);
   const terrainMin = terrain * (1 - TERRAIN_TOL);
   const terrainMax = terrain * (1 + TERRAIN_TOL);
 
-  const filtrerPieces = piecesChoix.length > 0;
+  // Pas de filtre pièces pour local commercial
+  const filtrerPieces = !isLocal && piecesChoix.length > 0;
   const piecesSet = new Set(piecesChoix.map(p => parseInt(p, 10)));
 
   let comps = [];
   for (const v of ventes) {
-    if (v.type !== type) continue;
+    // Pour local commercial : on matche tout type "Local..."
+    const typeMatch = isLocal ? v.type.startsWith("Local") : v.type === type;
+    if (!typeMatch) continue;
     if (!isFinite(v.prix) || !isFinite(v.surface) || !isFinite(v.lat) || !isFinite(v.lng)) continue;
     if (!(v.dateObj && v.dateObj >= DATE_MIN)) continue;
     if (v.surface < surfaceMin || v.surface > surfaceMax) continue;
@@ -351,7 +356,9 @@ document.getElementById('formEstimation').addEventListener('submit', async funct
   const piecesTexte = piecesChoix.length === 0
     ? "peu importe"
     : piecesChoix.map(p => p === "6" ? "6+" : p).join(", ") + " pièce(s)";
-  meta.textContent = `${type} • Rayon ${rayonKm} km • Surface ${Math.round(surfaceMin)}–${Math.round(surfaceMax)} m² • Pièces ${piecesTexte} • Après 01/01/2023`;
+  const typeLabel = isLocal ? "Local commercial" : type;
+  const piecesInfo = isLocal ? "" : ` • Pièces ${piecesTexte}`;
+  meta.textContent = `${typeLabel} • Rayon ${rayonKm} km • Surface ${Math.round(surfaceMin)}–${Math.round(surfaceMax)} m²${piecesInfo} • Après 01/01/2023`;
 
   const rows = top.map(v => {
     const pm2 = v.prix / v.surface;
