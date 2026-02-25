@@ -195,7 +195,7 @@ fetch(CSV_FILE)
     const iLng  = idx(["longitude","lon","lng"]);
 
     const iNum = idx(["adresse numero","adresse_numero","numero"]);
-    const iVoie = idx(["adresse nom de voie","adresse_nom_de_voie","voie"]);
+    const iVoie = idx(["adresse nom de voie","adresse_nom_de_voie","adresse nom voie","adresse_nom_voie","voie"]);
     const iCP = idx(["code postal","code_postal","cp"]);
     const iVille = idx(["nom commune","nom_commune","commune","ville"]);
     const iDate = idx(["date mutation","date_mutation","date"]);
@@ -257,7 +257,8 @@ document.getElementById('formEstimation').addEventListener('submit', async funct
 
   const type = document.getElementById('type').value.trim();
   const surface = parseFloat(document.getElementById('surface').value);
-  const piecesChoix = document.getElementById('pieces').value;
+  const piecesChoix = typeof getPiecesSelectionnees === 'function' ? getPiecesSelectionnees() : [];
+  // piecesChoix = [] → pas de filtre ; sinon tableau de strings ex: ["2","3","4"]
   const terrain = parseFloat(document.getElementById('terrain').value || "0");
   const rayonKm = parseFloat(document.getElementById('rayon').value);
 
@@ -296,8 +297,8 @@ document.getElementById('formEstimation').addEventListener('submit', async funct
   const terrainMin = terrain * (1 - TERRAIN_TOL);
   const terrainMax = terrain * (1 + TERRAIN_TOL);
 
-  const filtrerPieces = piecesChoix !== "";
-  const piecesMin = filtrerPieces ? parseInt(piecesChoix, 10) : null;
+  const filtrerPieces = piecesChoix.length > 0;
+  const piecesSet = new Set(piecesChoix.map(p => parseInt(p, 10)));
 
   let comps = [];
   for (const v of ventes) {
@@ -312,11 +313,11 @@ document.getElementById('formEstimation').addEventListener('submit', async funct
     }
 
     if (filtrerPieces) {
-      if (piecesMin >= 6) {
-        if (!(isFinite(v.pieces) && v.pieces >= 6)) continue;
-      } else {
-        if (!(isFinite(v.pieces) && v.pieces === piecesMin)) continue;
-      }
+      if (!isFinite(v.pieces)) continue;
+      const vp = Math.round(v.pieces);
+      // Si "6+" est sélectionné, les biens avec 6 pièces et + passent aussi
+      const match = piecesSet.has(vp) || (piecesSet.has(6) && vp >= 6);
+      if (!match) continue;
     }
 
     const d = distanceKm(lat, lon, v.lat, v.lng);
@@ -347,7 +348,9 @@ document.getElementById('formEstimation').addEventListener('submit', async funct
   comps.sort((a, b) => a.dist - b.dist);
   const top = comps.slice(0, 20);
 
-  const piecesTexte = (piecesChoix === "") ? "peu importe" : (piecesChoix === "6" ? "6 pièces et +" : `${piecesChoix} pièce(s)`);
+  const piecesTexte = piecesChoix.length === 0
+    ? "peu importe"
+    : piecesChoix.map(p => p === "6" ? "6+" : p).join(", ") + " pièce(s)";
   meta.textContent = `${type} • Rayon ${rayonKm} km • Surface ${Math.round(surfaceMin)}–${Math.round(surfaceMax)} m² • Pièces ${piecesTexte} • Après 01/01/2023`;
 
   const rows = top.map(v => {
