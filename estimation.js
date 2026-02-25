@@ -1,6 +1,6 @@
 let ventes = [];
 
-const CSV_FILE = 'dvf_light.csv';
+const CSV_FILE = 'https://cdn.jsdelivr.net/gh/attraction-immobiliere83/estimation-hy-res@main/dvf_light.csv';
 const SURFACE_TOL = 0.15;
 const TERRAIN_TOL = 0.20;
 
@@ -267,7 +267,7 @@ document.getElementById('formEstimation').addEventListener('submit', async funct
   const mapDiv = document.getElementById('map');
 
   // ── Loader animé ──────────────────────────────────────────────────────────
-  const typeLabel = type.startsWith('Local') ? 'locaux commerciaux' : (type === 'Maison' ? 'maisons' : 'appartements');
+  const typeLabelLoader = type.startsWith('Local') ? 'locaux commerciaux' : (type === 'Maison' ? 'maisons' : 'appartements');
   zone.innerHTML = `
     <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 16px;gap:18px;text-align:center;">
       <div style="
@@ -280,7 +280,7 @@ document.getElementById('formEstimation').addEventListener('submit', async funct
       <div>
         <div style="font-weight:700;font-size:16px;color:#111827;">Recherche en cours…</div>
         <div style="font-size:13px;color:#6b7280;margin-top:4px;">
-          On parcourt les ventes de ${typeLabel} dans un rayon de ${rayonKm} km
+          On parcourt les ventes de ${typeLabelLoader} dans un rayon de ${rayonKm} km
         </div>
       </div>
     </div>
