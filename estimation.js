@@ -169,15 +169,7 @@ const dataBadge = document.getElementById('dataBadge');
 fetch(CSV_FILE)
   .then(r => {
     if (!r.ok) throw new Error(`CSV introuvable: ${CSV_FILE} (HTTP ${r.status})`);
-    return r.arrayBuffer();
-  })
-  .then(buffer => {
-    // Détection automatique de l'encoding : UTF-8 BOM ou Latin-1
-    const u8 = new Uint8Array(buffer);
-    const isUTF8BOM = (u8[0] === 0xEF && u8[1] === 0xBB && u8[2] === 0xBF);
-    // TextDecoder('utf-8') avec { ignoreBOM: true } supprime le BOM automatiquement
-    const encoding = isUTF8BOM ? 'utf-8' : 'iso-8859-1';
-    return new TextDecoder(encoding, { ignoreBOM: true }).decode(buffer);
+    return r.text();
   })
   .then(text => {
     const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
