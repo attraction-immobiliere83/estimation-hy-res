@@ -172,12 +172,12 @@ fetch(CSV_FILE)
     return r.arrayBuffer();
   })
   .then(buffer => {
-    // Détection automatique de l'encoding : Latin-1 (DVF officiel) ou UTF-8
+    // Détection automatique de l'encoding : UTF-8 BOM ou Latin-1
     const u8 = new Uint8Array(buffer);
-    // Si le fichier commence par BOM UTF-8 (EF BB BF), on décode en UTF-8
     const isUTF8BOM = (u8[0] === 0xEF && u8[1] === 0xBB && u8[2] === 0xBF);
+    // TextDecoder('utf-8') avec { ignoreBOM: true } supprime le BOM automatiquement
     const encoding = isUTF8BOM ? 'utf-8' : 'iso-8859-1';
-    return new TextDecoder(encoding).decode(buffer);
+    return new TextDecoder(encoding, { ignoreBOM: true }).decode(buffer);
   })
   .then(text => {
     const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
