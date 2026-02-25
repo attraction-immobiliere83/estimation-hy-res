@@ -297,9 +297,10 @@
         <div class="row" style="margin-top:12px;">
           <div>
             <label for="type">Type de bien</label>
-            <select id="type">
+            <select id="type" onchange="onTypeChange()">
               <option value="Maison">Maison</option>
               <option value="Appartement">Appartement</option>
+              <option value="Local industriel. commercial ou assimil&#233;">Local commercial</option>
             </select>
           </div>
           <div>
@@ -319,24 +320,22 @@
             <label for="surface">Surface habitable (m²)</label>
             <input id="surface" type="number" min="10" placeholder="Ex : 80" required>
           </div>
-          <div>
+          <div id="piecesBlock">
             <label>Nombre de pièces principales</label>
             <div id="piecesGroup" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:2px;">
-              <label class="checkpill active" data-val="">
-                <input type="checkbox" value="" checked hidden> Peu importe <span style="font-size:11px;color:var(--muted);">(recommandé)</span>
-              </label>
-              <label class="checkpill" data-val="1"><input type="checkbox" value="1" hidden> 1 pièce</label>
-              <label class="checkpill" data-val="2"><input type="checkbox" value="2" hidden> 2 pièces</label>
-              <label class="checkpill" data-val="3"><input type="checkbox" value="3" hidden> 3 pièces</label>
-              <label class="checkpill" data-val="4"><input type="checkbox" value="4" hidden> 4 pièces</label>
-              <label class="checkpill" data-val="5"><input type="checkbox" value="5" hidden> 5 pièces</label>
-              <label class="checkpill" data-val="6"><input type="checkbox" value="6" hidden> 6+ pièces</label>
+              <div class="checkpill active" data-val="">Peu importe <span style="font-size:11px;color:var(--muted);">(recommandé)</span></div>
+              <div class="checkpill" data-val="1">1 pièce</div>
+              <div class="checkpill" data-val="2">2 pièces</div>
+              <div class="checkpill" data-val="3">3 pièces</div>
+              <div class="checkpill" data-val="4">4 pièces</div>
+              <div class="checkpill" data-val="5">5 pièces</div>
+              <div class="checkpill" data-val="6">6+ pièces</div>
             </div>
             <p style="margin:6px 0 0;font-size:12px;color:var(--muted);">Exemple : cochez <b>2</b>, puis ajoutez <b>3</b> et <b>4</b> si vous voulez élargir la recherche.</p>
           </div>
         </div>
 
-        <div style="margin-top:12px;">
+        <div id="terrainBlock" style="margin-top:12px;">
           <label for="terrain">Surface terrain (m²) (uniquement si maison)</label>
           <input id="terrain" type="number" min="0" placeholder="Ex : 300">
         </div>
@@ -391,26 +390,43 @@
   </div>
 
 <script>
-// Gestion des checkboxes pièces
+// ── Gestion affichage selon type de bien ──────────────────────────────────
+function onTypeChange(){
+  const type = document.getElementById('type').value;
+  const isMaison = type === 'Maison';
+  const isLocal  = type.startsWith('Local');
+
+  // Terrain : uniquement pour maison
+  document.getElementById('terrainBlock').style.display = isMaison ? '' : 'none';
+  if(!isMaison) document.getElementById('terrain').value = '';
+
+  // Pièces : masqué pour local commercial
+  document.getElementById('piecesBlock').style.display = isLocal ? 'none' : '';
+}
+// Init au chargement
+onTypeChange();
+
+// ── Checkboxes pièces (divs simples, pas de label+input) ─────────────────
 document.addEventListener('DOMContentLoaded', function(){
   const group = document.getElementById('piecesGroup');
   const pills = group.querySelectorAll('.checkpill');
   const peuImporte = group.querySelector('[data-val=""]');
 
-  pills.forEach(pill => {
-    pill.addEventListener('click', function(){
+  pills.forEach(function(pill){
+    pill.addEventListener('click', function(e){
+      e.stopPropagation();
       const val = this.dataset.val;
 
       if(val === ""){
-        // Clic sur "Peu importe" → tout désélectionner sauf lui
+        // Clic "Peu importe" → tout réinitialiser
         pills.forEach(p => p.classList.remove('active'));
         this.classList.add('active');
       } else {
-        // Désélectionner "Peu importe"
+        // Désactiver "Peu importe"
         peuImporte.classList.remove('active');
-        // Toggle ce pill
+        // Basculer ce pill
         this.classList.toggle('active');
-        // Si plus rien de sélectionné → remettre "Peu importe"
+        // Si rien de sélectionné → revenir à "Peu importe"
         const anyActive = [...pills].filter(p => p.dataset.val !== "" && p.classList.contains('active'));
         if(anyActive.length === 0){
           peuImporte.classList.add('active');
@@ -420,11 +436,11 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 });
 
-// Fonction exposée pour récupérer les pièces sélectionnées
+// ── Lecture des pièces cochées ────────────────────────────────────────────
 function getPiecesSelectionnees(){
   const group = document.getElementById('piecesGroup');
   const peuImporte = group.querySelector('[data-val=""].active');
-  if(peuImporte) return []; // [] = pas de filtre
+  if(peuImporte) return [];
   return [...group.querySelectorAll('.checkpill.active')].map(p => p.dataset.val);
 }
 </script>
