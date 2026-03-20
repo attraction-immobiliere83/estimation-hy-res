@@ -5,12 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Estimation immobilière – Attraction Immobilière Hyères</title>
 
-<!-- Leaflet -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <style>
-  /* ── Variables ────────────────────────────────────────────── */
   :root{
     --pink:    #E70B95;
     --pink2:   #c2007e;
@@ -31,10 +29,14 @@
     min-height:100vh;
   }
 
-  /* ── WRAPPER ──────────────────────────────────────────────── */
-  .wrap{ width:100%; max-width:860px; margin:0 auto; padding:24px 16px 48px; }
+  .wrap{
+    width:100%;
+    max-width:100%;
+    margin:0;
+    padding:24px 28px 48px;
+  }
 
-  /* ── HERO ─────────────────────────────────────────────────── */
+  /* ── HERO ── */
   .hero{
     background:var(--bg-card);
     border:1px solid var(--border);
@@ -44,67 +46,43 @@
     margin-bottom:20px;
   }
   .hero-bar{ height:5px; background:linear-gradient(90deg,var(--pink),var(--gold)); }
-  .hero-body{ padding:2rem 2rem 1.6rem; text-align:center; }
+  .hero-body{ padding:2rem 2.5rem 1.8rem; text-align:center; }
   .hero-tag{
     display:inline-block;
-    background:var(--bg-soft);
-    color:var(--pink);
+    background:var(--bg-soft);color:var(--pink);
     font-size:13px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;
     padding:6px 18px;border-radius:20px;margin-bottom:14px;
   }
-  .hero-title{
-    font-size:30px;font-weight:800;color:var(--dark);line-height:1.25;margin-bottom:10px;
-  }
+  .hero-title{ font-size:32px;font-weight:800;color:var(--dark);line-height:1.25;margin-bottom:10px; }
   .hero-title em{ color:var(--pink);font-style:normal; }
-  .hero-sub{ font-size:16px;color:var(--muted);line-height:1.65;max-width:560px;margin:0 auto 1.4rem; }
-
-  /* Points forts */
-  .hero-points{
-    display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-bottom:1.6rem;
-  }
+  .hero-sub{ font-size:16px;color:var(--muted);line-height:1.65;max-width:620px;margin:0 auto 1.4rem; }
+  .hero-points{ display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-bottom:1.4rem; }
   .hero-pt{
     display:flex;align-items:center;gap:7px;
     background:var(--bg-soft);border:1px solid var(--border);
     border-radius:50px;padding:7px 16px;
     font-size:14px;font-weight:600;color:var(--dark);
   }
-  .hero-pt::before{
-    content:'';width:8px;height:8px;border-radius:50%;
-    background:var(--gold);flex-shrink:0;
-  }
+  .hero-pt::before{ content:'';width:8px;height:8px;border-radius:50%;background:var(--gold);flex-shrink:0; }
 
-  /* ── FORMULAIRE LEAD ──────────────────────────────────────── */
+  /* ── FORMULAIRE LEAD ── */
   .lead-card{
-    background:var(--bg-card);
-    border:1px solid var(--border);
-    border-radius:var(--radius);
-    padding:2rem;
-    box-shadow:var(--shadow);
-    margin-bottom:20px;
+    background:var(--bg-card);border:1px solid var(--border);
+    border-radius:var(--radius);padding:2rem 2.5rem;
+    box-shadow:var(--shadow);margin-bottom:20px;
   }
-  .lead-title{
-    font-size:20px;font-weight:800;color:var(--dark);margin-bottom:6px;
-  }
+  .lead-title{ font-size:20px;font-weight:800;color:var(--dark);margin-bottom:6px; }
   .lead-sub{ font-size:14px;color:var(--muted);margin-bottom:1.4rem;line-height:1.5; }
-
   .lead-row{ display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px; }
   @media(max-width:600px){ .lead-row{ grid-template-columns:1fr; } }
-
-  .field label{
-    display:block;font-size:13px;font-weight:700;color:var(--muted);
-    letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px;
-  }
+  .field label{ display:block;font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px; }
   .field input{
     width:100%;padding:12px 14px;
     border:1.5px solid var(--border);border-radius:12px;
     font-size:15px;color:var(--dark);background:#fff;outline:none;
     transition:border-color .2s,box-shadow .2s;
   }
-  .field input:focus{
-    border-color:var(--pink);
-    box-shadow:0 0 0 4px rgba(231,11,149,.10);
-  }
-
+  .field input:focus{ border-color:var(--pink);box-shadow:0 0 0 4px rgba(231,11,149,.10); }
   .rgpd-block{
     display:flex;align-items:flex-start;gap:10px;
     background:var(--bg-soft);border:1px solid var(--border);
@@ -113,7 +91,6 @@
   .rgpd-block input[type=checkbox]{ width:18px;height:18px;flex-shrink:0;margin-top:2px;accent-color:var(--pink); }
   .rgpd-block label{ font-size:13px;color:var(--muted);line-height:1.55;cursor:pointer; }
   .rgpd-block a{ color:var(--pink);text-decoration:underline; }
-
   .btn-lead{
     width:100%;padding:16px;border:none;border-radius:50px;cursor:pointer;
     background:var(--pink);color:#fff;
@@ -122,29 +99,23 @@
   }
   .btn-lead:hover{ background:var(--pink2); }
   .btn-lead svg{ width:18px;height:18px;fill:#fff; }
-
-  .lead-reassurance{
-    text-align:center;font-size:13px;color:var(--muted);margin-top:10px;
-    display:flex;align-items:center;justify-content:center;gap:6px;
-  }
-  .lead-reassurance::before{
-    content:'🔒';font-size:14px;
-  }
-
+  .btn-lead:disabled{ background:#ccc;cursor:not-allowed; }
+  .lead-reassurance{ text-align:center;font-size:13px;color:var(--muted);margin-top:10px; }
   #leadError{
     display:none;background:#fef2f2;border:1px solid #fca5a5;
-    border-radius:10px;padding:10px 14px;
-    font-size:13px;color:#dc2626;margin-top:10px;
+    border-radius:10px;padding:10px 14px;font-size:13px;color:#dc2626;margin-top:10px;
+  }
+  #leadSuccess{
+    display:none;background:#f0fdf4;border:1px solid #86efac;
+    border-radius:10px;padding:10px 14px;font-size:13px;color:#16a34a;margin-top:10px;
   }
 
-  /* ── SIMULATEUR (caché au départ) ────────────────────────── */
+  /* ── SIMULATEUR ── */
   #simulateur{ display:none; }
-
   .sim-welcome{
     background:var(--bg-card);border:1px solid var(--border);
-    border-radius:var(--radius);padding:1.4rem 1.8rem;
-    margin-bottom:16px;
-    display:flex;align-items:center;gap:14px;
+    border-radius:var(--radius);padding:1.4rem 2rem;
+    margin-bottom:16px;display:flex;align-items:center;gap:14px;
     box-shadow:0 4px 14px rgba(231,11,149,.07);
   }
   .sim-welcome-icon{
@@ -155,11 +126,9 @@
   .sim-welcome-icon svg{ width:22px;height:22px;fill:var(--pink); }
   .sim-welcome-text{ font-size:15px;color:var(--dark);line-height:1.5; }
   .sim-welcome-text strong{ color:var(--pink); }
-
-  /* Card formulaire simulateur */
   .sim-card{
     background:var(--bg-card);border:1px solid var(--border);
-    border-radius:var(--radius);padding:1.8rem;margin-bottom:16px;
+    border-radius:var(--radius);padding:1.8rem 2.5rem;margin-bottom:16px;
     box-shadow:0 4px 14px rgba(0,0,0,.05);
   }
   .sim-card h2{
@@ -171,26 +140,16 @@
     width:26px;height:26px;border-radius:50%;
     background:var(--pink);color:#fff;font-size:13px;font-weight:800;flex-shrink:0;
   }
-
   .sim-row{ display:grid;grid-template-columns:1fr 1fr;gap:12px; }
   @media(max-width:600px){ .sim-row{ grid-template-columns:1fr; } }
-
-  .sim-field label{
-    display:block;font-size:12px;font-weight:700;color:var(--muted);
-    letter-spacing:.05em;text-transform:uppercase;margin-bottom:5px;
-  }
+  .sim-field label{ display:block;font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin-bottom:5px; }
   .sim-field input,.sim-field select{
     width:100%;padding:11px 12px;
     border:1.5px solid var(--border);border-radius:10px;
     font-size:14px;color:var(--dark);background:#fff;outline:none;
     transition:border-color .2s,box-shadow .2s;
   }
-  .sim-field input:focus,.sim-field select:focus{
-    border-color:var(--pink);
-    box-shadow:0 0 0 3px rgba(231,11,149,.10);
-  }
-
-  /* Pills pièces */
+  .sim-field input:focus,.sim-field select:focus{ border-color:var(--pink);box-shadow:0 0 0 3px rgba(231,11,149,.10); }
   .pill-group{ display:flex;flex-wrap:wrap;gap:7px;margin-top:2px; }
   .checkpill{
     display:inline-flex;align-items:center;gap:5px;
@@ -200,10 +159,7 @@
     cursor:pointer;user-select:none;transition:all .15s;
   }
   .checkpill:hover{ border-color:var(--pink);color:var(--pink); }
-  .checkpill.active{
-    background:var(--bg-soft);border-color:var(--pink);color:var(--pink);
-  }
-
+  .checkpill.active{ background:var(--bg-soft);border-color:var(--pink);color:var(--pink); }
   .btn-search{
     width:100%;padding:15px;border:none;border-radius:50px;cursor:pointer;
     background:var(--pink);color:#fff;
@@ -213,10 +169,7 @@
   }
   .btn-search:hover{ background:var(--pink2); }
   .btn-search svg{ width:17px;height:17px;fill:#fff; }
-
-  .sim-badges{
-    display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;
-  }
+  .sim-badges{ display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px; }
   @media(max-width:600px){ .sim-badges{ grid-template-columns:1fr; } }
   .sim-badge{
     display:flex;align-items:center;justify-content:center;
@@ -227,52 +180,29 @@
   .sim-badge.ok{ color:#059669; }
   .sim-badge.warn{ color:#b45309; }
 
-  /* ── RÉSULTATS ────────────────────────────────────────────── */
-  #map{
-    margin-top:12px;height:340px;
-    border:1px solid var(--border);border-radius:14px;
-    overflow:hidden;display:none;
-  }
-  .kpis{
-    display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px;
-  }
+  /* ── RÉSULTATS ── */
+  #map{ margin-top:12px;height:380px;border:1px solid var(--border);border-radius:14px;overflow:hidden;display:none; }
+  .kpis{ display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px; }
   @media(max-width:700px){ .kpis{ grid-template-columns:repeat(2,1fr); } }
-  .kpi{
-    background:var(--bg-soft);border:1px solid var(--border);
-    border-radius:12px;padding:12px;
-  }
+  .kpi{ background:var(--bg-soft);border:1px solid var(--border);border-radius:12px;padding:12px; }
   .kpi .klabel{ font-size:12px;color:var(--muted);margin-bottom:5px; }
   .kpi .kvalue{ font-size:18px;font-weight:800;color:var(--dark); }
   .kpi .ksub{ font-size:11px;color:var(--muted);margin-top:3px; }
-
-  .tableWrap{
-    margin-top:14px;overflow:auto;
-    border-radius:12px;border:1px solid var(--border);
-  }
+  .tableWrap{ margin-top:14px;overflow:auto;border-radius:12px;border:1px solid var(--border); }
   table{ width:100%;border-collapse:collapse;background:#fff;min-width:820px; }
-  th,td{
-    padding:9px 10px;border-bottom:1px solid var(--border);
-    text-align:left;font-size:13px;white-space:nowrap;
-  }
-  th{
-    font-size:12px;font-weight:700;color:var(--muted);
-    background:#fdf5ff;text-transform:uppercase;letter-spacing:.05em;
-    position:sticky;top:0;z-index:2;
-  }
+  th,td{ padding:9px 10px;border-bottom:1px solid var(--border);text-align:left;font-size:13px;white-space:nowrap; }
+  th{ font-size:12px;font-weight:700;color:var(--muted);background:#fdf5ff;text-transform:uppercase;letter-spacing:.05em;position:sticky;top:0;z-index:2; }
   tr:hover td{ background:#fdf5ff; }
-
   .hint{ font-size:13px;color:var(--muted);line-height:1.6;padding:8px 0; }
 
-  /* ── CTA BAS ──────────────────────────────────────────────── */
+  /* ── CTA BAS ── */
   .cta-bottom{
     background:var(--bg-card);border:1px solid var(--border);
-    border-radius:var(--radius);
-    overflow:hidden;margin-top:16px;
-    box-shadow:var(--shadow);
+    border-radius:var(--radius);overflow:hidden;margin-top:16px;box-shadow:var(--shadow);
   }
   .cta-bottom-bar{ height:4px;background:linear-gradient(90deg,var(--pink),var(--gold)); }
   .cta-bottom-body{
-    padding:1.6rem 1.8rem;
+    padding:1.8rem 2.5rem;
     display:flex;align-items:center;justify-content:space-between;gap:1.2rem;flex-wrap:wrap;
   }
   .cta-bottom-text h3{ font-size:18px;font-weight:800;margin-bottom:5px; }
@@ -282,26 +212,18 @@
     display:inline-flex;align-items:center;gap:7px;
     background:var(--pink);color:#fff;
     font-size:14px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
-    padding:12px 22px;border-radius:50px;text-decoration:none;
-    transition:background .2s;
+    padding:12px 22px;border-radius:50px;text-decoration:none;transition:background .2s;
   }
   .cta-btn-pink:hover{ background:var(--pink2); }
   .cta-btn-outline{
     display:inline-flex;align-items:center;gap:7px;
-    background:transparent;color:var(--pink);
-    border:2px solid var(--pink);
+    background:transparent;color:var(--pink);border:2px solid var(--pink);
     font-size:14px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
-    padding:11px 22px;border-radius:50px;text-decoration:none;
-    transition:background .2s,color .2s;
+    padding:11px 22px;border-radius:50px;text-decoration:none;transition:background .2s,color .2s;
   }
   .cta-btn-outline:hover{ background:var(--pink);color:#fff; }
+  .rgpd-bottom{ font-size:12px;color:var(--muted);line-height:1.5;padding:0 2.5rem 1.4rem; }
 
-  .rgpd-bottom{
-    font-size:12px;color:var(--muted);line-height:1.5;
-    padding:0 1.8rem 1.4rem;
-  }
-
-  /* Loader */
   @keyframes spin{ to{ transform:rotate(360deg); } }
 </style>
 </head>
@@ -309,16 +231,13 @@
 <body>
 <div class="wrap">
 
-  <!-- ══════════════════════════════════════════
-       ÉTAPE 1 : ACCROCHE + FORMULAIRE LEAD
-  ══════════════════════════════════════════ -->
+  <!-- ══ ÉTAPE 1 : ACCROCHE + LEAD ══ -->
   <div id="etape1">
 
-    <!-- Hero -->
     <div class="hero">
       <div class="hero-bar"></div>
       <div class="hero-body">
-        <div class="hero-tag">Outil exclusif</div>
+        <div class="hero-tag">Outil exclusif · Gratuit</div>
         <div class="hero-title">Découvrez les biens vendus<br><em>autour de chez vous</em></div>
         <div class="hero-sub">Accédez instantanément aux ventes réelles dans votre secteur. Prix au m², adresses, dates — des données publiques présentées simplement pour vous aider à vous positionner.</div>
         <div class="hero-points">
@@ -331,10 +250,9 @@
       </div>
     </div>
 
-    <!-- Formulaire lead -->
     <div class="lead-card">
       <div class="lead-title">Accédez gratuitement au simulateur</div>
-      <div class="lead-sub">Renseignez vos coordonnées pour débloquer l'outil. Nathalie pourra vous recontacter si vous souhaitez une estimation personnalisée.</div>
+      <div class="lead-sub">Renseignez vos coordonnées pour débloquer l'outil. Nathalie pourra vous recontacter si vous souhaitez une estimation personnalisée et gratuite sur place.</div>
 
       <form id="formLead" novalidate>
         <div class="lead-row">
@@ -361,29 +279,26 @@
         <div class="rgpd-block">
           <input type="checkbox" id="leadRgpd">
           <label for="leadRgpd">
-            J'accepte que mes coordonnées soient utilisées par <strong>Attraction Immobilière</strong> (Nathalie Chauvin) pour me recontacter dans le cadre d'un projet immobilier. Aucune donnée n'est transmise à des tiers. Conformément au RGPD, vous disposez d'un droit d'accès et de suppression de vos données.
+            J'accepte que mes coordonnées soient utilisées par <strong>Attraction Immobilière</strong> (Nathalie Chauvin) pour me recontacter dans le cadre d'un projet immobilier. Données conservées 36 mois maximum, jamais revendues à des tiers. <a href="https://attraction-immobiliere.com/fr/mentions-legales" target="_blank">Politique de confidentialité</a>
           </label>
         </div>
 
         <div id="leadError">Merci de remplir tous les champs et d'accepter la politique de confidentialité.</div>
+        <div id="leadSuccess">Vos coordonnées ont bien été enregistrées. Accès au simulateur en cours…</div>
 
-        <button type="submit" class="btn-lead">
+        <button type="submit" class="btn-lead" id="btnLead">
           <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg>
           Accéder au simulateur gratuitement
         </button>
-
-        <div class="lead-reassurance">Accès immédiat · Aucun engagement · 100% gratuit</div>
+        <div class="lead-reassurance">🔒 Accès immédiat · Aucun engagement · 100% gratuit</div>
       </form>
     </div>
 
   </div>
 
-  <!-- ══════════════════════════════════════════
-       ÉTAPE 2 : SIMULATEUR (affiché après lead)
-  ══════════════════════════════════════════ -->
+  <!-- ══ ÉTAPE 2 : SIMULATEUR ══ -->
   <div id="simulateur">
 
-    <!-- Message de bienvenue personnalisé -->
     <div class="sim-welcome">
       <div class="sim-welcome-icon">
         <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg>
@@ -393,7 +308,6 @@
       </div>
     </div>
 
-    <!-- Formulaire de recherche -->
     <div class="sim-card">
       <h2><span>1</span> Décrivez votre bien</h2>
       <form id="formEstimation">
@@ -467,7 +381,6 @@
       </form>
     </div>
 
-    <!-- Résultats -->
     <div class="sim-card">
       <h2><span>2</span> Résultats</h2>
       <div id="meta" style="font-size:13px;color:var(--muted);margin-bottom:8px;"></div>
@@ -475,7 +388,6 @@
       <div id="map"></div>
     </div>
 
-    <!-- CTA bas -->
     <div class="cta-bottom">
       <div class="cta-bottom-bar"></div>
       <div class="cta-bottom-body">
@@ -488,7 +400,7 @@
             <svg style="width:16px;height:16px;fill:#fff;" viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"></path></svg>
             Appeler Nathalie
           </a>
-          <a class="cta-btn-outline" href="https://attraction-immobiliere.com/contactez-lagence/" target="_blank">
+          <a class="cta-btn-outline" href="https://card.pm/immo/nathalie.chauvin---26-ans-dexperience-dans-limmobilier" target="_blank">
             Demander un rendez-vous
           </a>
         </div>
@@ -502,8 +414,8 @@
 </div>
 
 <script>
-/* ── Formulaire lead ─────────────────────────────────────── */
-document.getElementById('formLead').addEventListener('submit', function(e){
+/* ── Formulaire lead → Web3Forms ── */
+document.getElementById('formLead').addEventListener('submit', async function(e){
   e.preventDefault();
   const prenom = document.getElementById('leadPrenom').value.trim();
   const nom    = document.getElementById('leadNom').value.trim();
@@ -511,29 +423,44 @@ document.getElementById('formLead').addEventListener('submit', function(e){
   const tel    = document.getElementById('leadTel').value.trim();
   const rgpd   = document.getElementById('leadRgpd').checked;
   const err    = document.getElementById('leadError');
+  const ok     = document.getElementById('leadSuccess');
+  const btn    = document.getElementById('btnLead');
 
   if(!prenom || !nom || !email || !tel || !rgpd){
     err.style.display = 'block';
+    ok.style.display  = 'none';
     return;
   }
   err.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = 'Envoi en cours…';
 
-  // Affichage du prénom dans le message de bienvenue
+  try {
+    await fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        access_key: 'VOTRE_CLE_WEB3FORMS',
+        subject: '🏠 Nouveau lead simulateur — ' + prenom + ' ' + nom,
+        name: prenom + ' ' + nom,
+        email: email,
+        phone: tel,
+        message: 'Nouveau lead depuis le simulateur DVF.\nPrénom : ' + prenom + '\nNom : ' + nom + '\nEmail : ' + email + '\nTéléphone : ' + tel,
+        from_name: 'Simulateur Attraction Immobilière'
+      })
+    });
+  } catch(err2) { /* silencieux si réseau */ }
+
+  ok.style.display = 'block';
   document.getElementById('prenomAffiche').textContent = prenom;
 
-  // Masquer étape 1, afficher simulateur
-  document.getElementById('etape1').style.display = 'none';
-  document.getElementById('simulateur').style.display = 'block';
-
-  // Envoi des données vers Formspree (remplace l'URL par ton endpoint Formspree)
-  fetch('https://formspree.io/f/VOTRE_ID_FORMSPREE', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-    body: JSON.stringify({ prenom, nom, email, tel, source: 'Simulateur DVF' })
-  }).catch(() => {}); // Silencieux si échec
+  setTimeout(function(){
+    document.getElementById('etape1').style.display = 'none';
+    document.getElementById('simulateur').style.display = 'block';
+  }, 1200);
 });
 
-/* ── Type de bien ────────────────────────────────────────── */
+/* ── Type de bien ── */
 function onTypeChange(){
   const type = document.getElementById('type').value;
   const isMaison = type === 'Maison';
@@ -544,7 +471,7 @@ function onTypeChange(){
 }
 onTypeChange();
 
-/* ── Pills pièces ────────────────────────────────────────── */
+/* ── Pills pièces ── */
 document.addEventListener('DOMContentLoaded', function(){
   const group = document.getElementById('piecesGroup');
   const pills = group.querySelectorAll('.checkpill');
@@ -552,13 +479,13 @@ document.addEventListener('DOMContentLoaded', function(){
   pills.forEach(function(pill){
     pill.addEventListener('click', function(){
       const val = this.dataset.val;
-      if(val === ""){
+      if(val === ''){
         pills.forEach(p => p.classList.remove('active'));
         this.classList.add('active');
       } else {
         peuImporte.classList.remove('active');
         this.classList.toggle('active');
-        const anyActive = [...pills].filter(p => p.dataset.val !== "" && p.classList.contains('active'));
+        const anyActive = [...pills].filter(p => p.dataset.val !== '' && p.classList.contains('active'));
         if(anyActive.length === 0) peuImporte.classList.add('active');
       }
     });
