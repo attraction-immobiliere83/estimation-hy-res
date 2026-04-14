@@ -8,6 +8,13 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script type="text/javascript">
+   (function(){
+      emailjs.init("Szprsivl9eIr6jCBD");
+   })();
+</script>
+
 <style>
   :root{
     --pink:    #E70B95;
@@ -231,7 +238,6 @@
 <body>
 <div class="wrap">
 
-  <!-- ══ ÉTAPE 1 : ACCROCHE + LEAD ══ -->
   <div id="etape1">
 
     <div class="hero">
@@ -284,7 +290,7 @@
         </div>
 
         <div id="leadError">Merci de remplir tous les champs et d'accepter la politique de confidentialité.</div>
-        <div id="leadSuccess">Vos coordonnées ont bien été enregistrées. Accès au simulateur en cours…</div>
+        <div id="leadSuccess">Accès autorisé. Chargement du simulateur...</div>
 
         <button type="submit" class="btn-lead" id="btnLead">
           <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg>
@@ -296,7 +302,6 @@
 
   </div>
 
-  <!-- ══ ÉTAPE 2 : SIMULATEUR ══ -->
   <div id="simulateur">
 
     <div class="sim-welcome">
@@ -414,8 +419,8 @@
 </div>
 
 <script>
-/* ── Formulaire lead → Web3Forms ── */
-document.getElementById('formLead').addEventListener('submit', async function(e){
+/* ── Formulaire lead → EMAILJS ── */
+document.getElementById('formLead').addEventListener('submit', function(e){
   e.preventDefault();
   const prenom = document.getElementById('leadPrenom').value.trim();
   const nom    = document.getElementById('leadNom').value.trim();
@@ -431,33 +436,37 @@ document.getElementById('formLead').addEventListener('submit', async function(e)
     ok.style.display  = 'none';
     return;
   }
+  
   err.style.display = 'none';
   btn.disabled = true;
-  btn.textContent = 'Envoi en cours…';
+  btn.textContent = 'Connexion en cours...';
 
-  try {
-    await fetch('https://api.web3forms.com/submit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({
-        access_key: 'VOTRE_CLE_WEB3FORMS',
-        subject: '🏠 Nouveau lead simulateur — ' + prenom + ' ' + nom,
-        name: prenom + ' ' + nom,
-        email: email,
-        phone: tel,
-        message: 'Nouveau lead depuis le simulateur DVF.\nPrénom : ' + prenom + '\nNom : ' + nom + '\nEmail : ' + email + '\nTéléphone : ' + tel,
-        from_name: 'Simulateur Attraction Immobilière'
-      })
+  // Paramètres pour ton template EmailJS
+  const templateParams = {
+    prenom: prenom,
+    nom: nom,
+    email: email,
+    tel: tel
+  };
+
+  // ENVOI REEL
+  emailjs.send("service_q8umvob", "template_l4c2098", templateParams)
+    .then(function() {
+      ok.style.display = 'block';
+      document.getElementById('prenomAffiche').textContent = prenom;
+
+      setTimeout(function(){
+        document.getElementById('etape1').style.display = 'none';
+        document.getElementById('simulateur').style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 1000);
+    }, function(error) {
+      console.log('FAILED...', error);
+      btn.disabled = false;
+      btn.textContent = 'Accéder au simulateur';
+      err.textContent = "Erreur d'envoi. Vérifiez votre connexion.";
+      err.style.display = 'block';
     });
-  } catch(err2) { /* silencieux si réseau */ }
-
-  ok.style.display = 'block';
-  document.getElementById('prenomAffiche').textContent = prenom;
-
-  setTimeout(function(){
-    document.getElementById('etape1').style.display = 'none';
-    document.getElementById('simulateur').style.display = 'block';
-  }, 1200);
 });
 
 /* ── Type de bien ── */
