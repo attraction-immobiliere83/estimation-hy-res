@@ -252,122 +252,96 @@ document.getElementById('formEstimation').addEventListener('submit', async funct
   const btn = e.target.querySelector('button');
   const originalBtnText = btn.textContent;
   
-  // 1. Récupération des valeurs du formulaire
-  const rue = document.getElementById('adresse').value.trim();
-  const cp = document.getElementById('cp').value.trim();
-  const ville = document.getElementById('ville').value.trim();
+  // 1. Récupération des entrées
+  const rue = document.getElementById('adresse').value;
+  const cp = document.getElementById('cp').value;
+  const ville = document.getElementById('ville').value;
   const typeBien = document.getElementById('type').value;
   const surfaceSaisie = parseFloat(document.getElementById('surface').value);
   const terrainSaisi = parseFloat(document.getElementById('terrain').value) || 0;
   const rayonKm = parseFloat(document.getElementById('rayon').value);
-  const piecesChoisies = getPiecesSelectionnees(); // Fonction définie dans votre index.html
+  const piecesChoisies = getPiecesSelectionnees(); // Fonction de ton index.html
 
   const resDiv = document.getElementById('resultats');
   const metaDiv = document.getElementById('meta');
 
   try {
     btn.disabled = true;
-    btn.textContent = "Géolocalisation en cours...";
+    btn.textContent = "Localisation en cours...";
     resDiv.innerHTML = '<p class="hint">Recherche des coordonnées GPS...</p>';
 
-    // 2. Géocodage via l'API Adresse Data Gouv
+    // 2. Géocodage (Adresse -> GPS)
     const query = encodeURIComponent(`${rue} ${cp} ${ville}`);
     const geoRes = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${query}&limit=1`);
     const geoData = await geoRes.json();
 
     if (!geoData.features || geoData.features.length === 0) {
-      throw new Error("Adresse introuvable. Précisez le numéro ou la rue.");
+      throw new Error("Désolé, nous n'avons pas trouvé cette adresse précise.");
     }
 
     const [lon, lat] = geoData.features[0].geometry.coordinates;
+    btn.textContent = "Analyse du marché...";
 
-    btn.textContent = "Analyse des ventes...";
-
-    // 3. Filtrage des données
+    // 3. Filtrage des ventes CSV
     let localVentes = ventes.filter(v => {
-      // Filtre Type
+      // Filtre Type (Maison / Appartement)
       if (v.type !== typeBien) return false;
 
       // Filtre Distance
       const d = distanceKm(lat, lon, v.lat, v.lng);
       if (d > rayonKm) return false;
-      v.dist = d;
+      v.dist = d; // On stocke la distance pour le tri
 
-      // Filtre Surface (TOLERANCE 15%)
+      // Filtre Surface (±15%)
       if (v.surface < surfaceSaisie * (1 - SURFACE_TOL) || v.surface > surfaceSaisie * (1 + SURFACE_TOL)) return false;
 
-      // Filtre Terrain (si Maison, TOLERANCE 20%)
+      // Filtre Terrain (±20% si c'est une maison)
       if (typeBien === "Maison" && terrainSaisi > 0) {
         if (v.surface_terrain < terrainSaisi * (1 - TERRAIN_TOL) || v.surface_terrain > terrainSaisi * (1 + TERRAIN_TOL)) return false;
-      }
-
-      // Filtre Pièces (si sélectionné)
-      if (piecesChoisies.length > 0) {
-        const pStr = v.pieces.toString();
-        // Gestion du "6+"
-        if (piecesChoisies.includes("6") && v.pieces >= 6) return true; 
-        if (!piecesChoisies.includes(pStr)) return false;
       }
 
       return true;
     });
 
-    // Nettoyage (doublons et prix aberrants)
+    // Nettoyage final
     localVentes = dedupeComparables(localVentes);
     localVentes = cleanComparables(localVentes, typeBien);
-
-    // Tri par distance
     localVentes.sort((a, b) => a.dist - b.dist);
 
     // 4. Affichage des résultats
     if (localVentes.length === 0) {
-      resDiv.innerHTML = `<p class="hint" style="color:#dc2626;">Aucune vente similaire trouvée dans un rayon de ${rayonKm}km. <br>Conseil : Augmentez le rayon de recherche.</p>`;
+      resDiv.innerHTML = `<p class="hint" style="color:#dc2626;">Aucune vente similaire trouvée à proximité. Essayez d'augmenter le rayon de recherche.</p>`;
       metaDiv.textContent = "";
-      if(map) document.getElementById('map').style.display = 'none';
     } else {
       const prixM2Array = localVentes.map(v => v.prix / v.surface);
       const moy = prixM2Array.reduce((a, b) => a + b, 0) / prixM2Array.length;
-      const med = mediane(prixM2Array);
 
-      metaDiv.innerHTML = `<strong>${localVentes.length}</strong> ventes trouvées dans un rayon de ${rayonKm}km.`;
+      metaDiv.innerHTML = `<strong>${localVentes.length}</strong> ventes comparables trouvées.`;
       
       let html = `
         <div class="kpis">
           <div class="kpi"><div class="klabel">Prix m² moyen</div><div class="kvalue">${formatM2(moy)}</div></div>
-          <div class="kpi"><div class="klabel">Prix m² médian</div><div class="kvalue">${formatM2(med)}</div></div>
-          <div class="kpi"><div class="klabel">Fourchette basse</div><div class="kvalue">${formatM2(percentile(prixM2Array, 0.2))}</div></div>
-          <div class="kpi"><div class="klabel">Fourchette haute</div><div class="kvalue">${formatM2(percentile(prixM2Array, 0.8))}</div></div>
+          <div class="kpi"><div class="klabel">Estimation conseillée</div><div class="kvalue">${formatEuro(moy * surfaceSaisie)}</div></div>
         </div>
         <div class="tableWrap">
           <table>
             <thead>
-              <tr>
-                <th>Date</th>
-                <th>Adresse</th>
-                <th>Surface</th>
-                <th>Terrain</th>
-                <th>Prix</th>
-                <th>Prix m²</th>
-                <th>Dist.</th>
-              </tr>
+              <tr><th>Date</th><th>Adresse</th><th>Surface</th><th>Prix</th><th>Dist.</th></tr>
             </thead>
             <tbody>
       `;
 
-      localVentes.forEach(v => {
+      localVentes.slice(0, 10).forEach(v => {
         html += `
           <tr>
             <td>${v.dateRaw}</td>
             <td>${v.adresse}</td>
-            <td>${v.surface} m² (${v.pieces}p)</td>
-            <td>${isNaN(v.surface_terrain) ? '-' : v.surface_terrain + ' m²'}</td>
+            <td>${v.surface} m²</td>
             <td><strong>${formatEuro(v.prix)}</strong></td>
-            <td>${formatM2(v.prix/v.surface)}</td>
             <td>${Math.round(v.dist * 1000)}m</td>
           </tr>
         `;
       });
-
       html += `</tbody></table></div>`;
       resDiv.innerHTML = html;
 
@@ -376,8 +350,7 @@ document.getElementById('formEstimation').addEventListener('submit', async funct
     }
 
   } catch (err) {
-    console.error(err);
-    resDiv.innerHTML = `<p class="hint" style="color:#dc2626;">Erreur : ${err.message}</p>`;
+    resDiv.innerHTML = `<p class="hint" style="color:#dc2626;">${err.message}</p>`;
   } finally {
     btn.disabled = false;
     btn.textContent = originalBtnText;
