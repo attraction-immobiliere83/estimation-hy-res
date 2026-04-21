@@ -12,6 +12,7 @@ const PRIX_MAX_MAISON = 5000000;
 
 const DATE_MIN = new Date('2023-01-01T00:00:00');
 
+/* --- Utilitaires --- */
 function normalizeHeader(s) {
   return (s || "")
     .toString()
@@ -20,12 +21,14 @@ function normalizeHeader(s) {
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/\s+/g, " ");
 }
+
 function toNumberFR(x) {
   if (x === undefined || x === null) return NaN;
   const s = x.toString().trim();
   if (!s) return NaN;
   return parseFloat(s.replace(/\s/g, "").replace(",", "."));
 }
+
 function parseDateSmart(s) {
   if (!s) return null;
   const t = s.trim();
@@ -36,18 +39,22 @@ function parseDateSmart(s) {
   const d = new Date(t);
   return isNaN(d.getTime()) ? null : d;
 }
+
 function formatEuro(n) {
   if (!isFinite(n)) return "-";
   return `${Math.round(n).toLocaleString('fr-FR')} €`;
 }
+
 function formatInt(n) {
   if (!isFinite(n)) return "-";
   return Math.round(n).toLocaleString('fr-FR');
 }
+
 function formatM2(n) {
   if (!isFinite(n)) return "-";
   return `${Math.round(n).toLocaleString('fr-FR')} €/m²`;
 }
+
 function distanceKm(lat1, lon1, lat2, lon2) {
   const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -58,25 +65,7 @@ function distanceKm(lat1, lon1, lat2, lon2) {
     Math.sin(dLon / 2) ** 2;
   return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
-function mediane(arr) {
-  const a = [...arr].sort((x, y) => x - y);
-  const m = Math.floor(a.length / 2);
-  return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2;
-}
-function percentile(arr, p) {
-  const a = [...arr].sort((x, y) => x - y);
-  const i = (a.length - 1) * p;
-  const lo = Math.floor(i);
-  const hi = Math.ceil(i);
-  if (lo === hi) return a[lo];
-  return a[lo] + (a[hi] - a[lo]) * (i - lo);
-}
-function detectDelimiter(headerLine) {
-  const candidates = [';', ',', '|'];
-  const counts = candidates.map(d => ({ d, c: (headerLine.split(d).length - 1) }));
-  counts.sort((a, b) => b.c - a.c);
-  return counts[0].c > 0 ? counts[0].d : ',';
-}
+
 function dedupeComparables(list) {
   const seen = new Set();
   const out = [];
@@ -88,6 +77,7 @@ function dedupeComparables(list) {
   }
   return out;
 }
+
 function cleanComparables(list, type) {
   const prixMax = (type === "Appartement") ? PRIX_MAX_APPART : PRIX_MAX_MAISON;
   return list.filter(v => {
@@ -103,6 +93,7 @@ function cleanComparables(list, type) {
 /* --- Carte --- */
 let map = null;
 let layerGroup = null;
+
 function ensureMap() {
   const mapDiv = document.getElementById('map');
   mapDiv.style.display = 'block';
@@ -115,6 +106,7 @@ function ensureMap() {
     layerGroup = L.layerGroup().addTo(map);
   }
 }
+
 function updateMap(subjectLat, subjectLon, rayonKm, points) {
   ensureMap();
   layerGroup.clearLayers();
@@ -168,14 +160,14 @@ const dataBadge = document.getElementById('dataBadge');
 
 fetch(CSV_FILE)
   .then(r => {
-    if (!r.ok) throw new Error(`CSV introuvable: ${CSV_FILE} (HTTP ${r.status})`);
+    if (!r.ok) throw new Error(`CSV introuvable: ${CSV_FILE}`);
     return r.text();
   })
   .then(text => {
     const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
-    if (lines.length < 2) throw new Error("CSV vide ou mal formé.");
+    if (lines.length < 2) throw new Error("Le fichier CSV est vide.");
 
-    const delim = detectDelimiter(lines[0]);
+    const delim = ";"; // Forcé selon votre format raw
     const headers = lines[0].split(delim).map(normalizeHeader);
 
     const idx = (names) => {
@@ -186,63 +178,52 @@ fetch(CSV_FILE)
       return -1;
     };
 
-    const iPrix = idx(["valeur fonciere","valeur_fonciere","prix"]);
-    const iType = idx(["type local","type_local","type"]);
-    const iSurf = idx(["surface reelle bati","surface_reelle_bati","surface habitable","surface_habitable"]);
-    const iPieces = idx(["nombre pieces principales","nombre_pieces_principales","pieces"]);
-    const iTerr = idx(["surface terrain","surface_terrain"]);
-    const iLat  = idx(["latitude","lat"]);
-    const iLng  = idx(["longitude","lon","lng"]);
-
-    const iNum = idx(["adresse numero","adresse_numero","numero"]);
-    const iVoie = idx(["adresse nom de voie","adresse_nom_de_voie","adresse nom voie","adresse_nom_voie","voie"]);
-    const iCP = idx(["code postal","code_postal","cp"]);
-    const iVille = idx(["nom commune","nom_commune","commune","ville"]);
-    const iDate = idx(["date mutation","date_mutation","date"]);
-
-    if ([iPrix, iType, iSurf, iLat, iLng].some(i => i === -1)) {
-      throw new Error("Colonnes indispensables introuvables (prix/type/surface/lat/lng).");
-    }
+    const iPrix   = idx(["valeur_fonciere", "valeur fonciere", "prix"]);
+    const iType   = idx(["type_local", "type local", "type"]);
+    const iSurf   = idx(["surface_reelle_bati", "surface reelle bati", "surface"]);
+    const iLat    = idx(["latitude", "lat"]);
+    const iLng    = idx(["longitude", "lng", "lon"]);
+    const iPieces = idx(["nombre_pieces_principales", "nombre pieces principales", "pieces"]);
+    const iTerr   = idx(["surface_terrain", "surface terrain"]);
+    const iDate   = idx(["date_mutation", "date mutation", "date"]);
+    const iNum    = idx(["adresse_numero", "adresse numero"]);
+    const iVoie   = idx(["adresse_nom_voie", "adresse nom voie"]);
+    const iCP     = idx(["code_postal", "code postal"]);
+    const iVille  = idx(["nom_commune", "nom commune"]);
 
     ventes = lines.slice(1).map(line => {
       const cols = line.split(delim);
+      
+      const latVal = toNumberFR(cols[iLat]);
+      const lngVal = toNumberFR(cols[iLng]);
 
-      const num = iNum !== -1 ? (cols[iNum] || "").trim() : "";
-      const voie = iVoie !== -1 ? (cols[iVoie] || "").trim() : "";
-      const cp = iCP !== -1 ? (cols[iCP] || "").trim() : "";
+      if (isNaN(latVal) || isNaN(lngVal)) return null;
+
+      const num   = iNum !== -1 ? (cols[iNum] || "").trim() : "";
+      const voie  = iVoie !== -1 ? (cols[iVoie] || "").trim() : "";
+      const cp    = iCP !== -1 ? (cols[iCP] || "").trim() : "";
       const ville = iVille !== -1 ? (cols[iVille] || "").trim() : "";
-      const dateRaw = iDate !== -1 ? (cols[iDate] || "").trim() : "";
-      const dateObj = parseDateSmart(dateRaw);
-
-      const adresseRue = `${num} ${voie}`.trim();
-      let full = `${adresseRue}${cp ? `, ${cp}` : ""}${ville ? ` ${ville}` : ""}`.trim();
-      if (!voie) {
-        const base = `${num || ""}${cp ? `, ${cp}` : ""}${ville ? ` ${ville}` : ""}`.trim();
-        full = `${base} (adresse partielle)`.trim();
-      }
 
       return {
         prix: toNumberFR(cols[iPrix]),
         type: (cols[iType] || "").trim(),
         surface: toNumberFR(cols[iSurf]),
-        pieces: iPieces !== -1 ? toNumberFR(cols[iPieces]) : NaN,
-        surface_terrain: iTerr !== -1 ? toNumberFR(cols[iTerr]) : NaN,
-        lat: toNumberFR(cols[iLat]),
-        lng: toNumberFR(cols[iLng]),
-        adresse: full || "-",
-        dateRaw,
-        dateObj
+        pieces: iPieces !== -1 ? toNumberFR(cols[iPieces]) : 0,
+        surface_terrain: iTerr !== -1 ? toNumberFR(cols[iTerr]) : 0,
+        lat: latVal,
+        lng: lngVal,
+        adresse: `${num} ${voie}, ${cp} ${ville}`.replace(/\s+/g, ' ').trim(),
+        dateRaw: cols[iDate] || ""
       };
-    });
+    }).filter(v => v !== null);
 
     dataBadge.textContent = `Données prêtes : ${ventes.length.toLocaleString('fr-FR')} lignes`;
-    dataBadge.classList.remove('warn');
-    dataBadge.classList.add('ok');
+    dataBadge.className = "sim-badge ok";
   })
   .catch(err => {
     console.error(err);
     dataBadge.textContent = `Erreur : ${err.message}`;
-    dataBadge.classList.add('warn');
+    dataBadge.className = "sim-badge warn";
   });
 
 /* --- Estimation --- */
@@ -252,7 +233,6 @@ document.getElementById('formEstimation').addEventListener('submit', async funct
   const btn = e.target.querySelector('button');
   const originalBtnText = btn.textContent;
   
-  // 1. Récupération des entrées
   const rue = document.getElementById('adresse').value;
   const cp = document.getElementById('cp').value;
   const ville = document.getElementById('ville').value;
@@ -260,42 +240,35 @@ document.getElementById('formEstimation').addEventListener('submit', async funct
   const surfaceSaisie = parseFloat(document.getElementById('surface').value);
   const terrainSaisi = parseFloat(document.getElementById('terrain').value) || 0;
   const rayonKm = parseFloat(document.getElementById('rayon').value);
-  const piecesChoisies = getPiecesSelectionnees(); // Fonction de ton index.html
 
   const resDiv = document.getElementById('resultats');
   const metaDiv = document.getElementById('meta');
 
   try {
     btn.disabled = true;
-    btn.textContent = "Localisation en cours...";
-    resDiv.innerHTML = '<p class="hint">Recherche des coordonnées GPS...</p>';
+    btn.textContent = "Localisation...";
+    resDiv.innerHTML = '<p class="hint">Recherche GPS de l\'adresse...</p>';
 
-    // 2. Géocodage (Adresse -> GPS)
     const query = encodeURIComponent(`${rue} ${cp} ${ville}`);
     const geoRes = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${query}&limit=1`);
     const geoData = await geoRes.json();
 
     if (!geoData.features || geoData.features.length === 0) {
-      throw new Error("Désolé, nous n'avons pas trouvé cette adresse précise.");
+      throw new Error("Adresse introuvable.");
     }
 
     const [lon, lat] = geoData.features[0].geometry.coordinates;
-    btn.textContent = "Analyse du marché...";
+    btn.textContent = "Analyse...";
 
-    // 3. Filtrage des ventes CSV
     let localVentes = ventes.filter(v => {
-      // Filtre Type (Maison / Appartement)
       if (v.type !== typeBien) return false;
 
-      // Filtre Distance
       const d = distanceKm(lat, lon, v.lat, v.lng);
       if (d > rayonKm) return false;
-      v.dist = d; // On stocke la distance pour le tri
+      v.dist = d;
 
-      // Filtre Surface (±15%)
       if (v.surface < surfaceSaisie * (1 - SURFACE_TOL) || v.surface > surfaceSaisie * (1 + SURFACE_TOL)) return false;
 
-      // Filtre Terrain (±20% si c'est une maison)
       if (typeBien === "Maison" && terrainSaisi > 0) {
         if (v.surface_terrain < terrainSaisi * (1 - TERRAIN_TOL) || v.surface_terrain > terrainSaisi * (1 + TERRAIN_TOL)) return false;
       }
@@ -303,31 +276,27 @@ document.getElementById('formEstimation').addEventListener('submit', async funct
       return true;
     });
 
-    // Nettoyage final
     localVentes = dedupeComparables(localVentes);
     localVentes = cleanComparables(localVentes, typeBien);
     localVentes.sort((a, b) => a.dist - b.dist);
 
-    // 4. Affichage des résultats
     if (localVentes.length === 0) {
-      resDiv.innerHTML = `<p class="hint" style="color:#dc2626;">Aucune vente similaire trouvée à proximité. Essayez d'augmenter le rayon de recherche.</p>`;
+      resDiv.innerHTML = `<p class="hint" style="color:#dc2626;">Aucune vente similaire trouvée. Augmentez le rayon.</p>`;
       metaDiv.textContent = "";
     } else {
       const prixM2Array = localVentes.map(v => v.prix / v.surface);
       const moy = prixM2Array.reduce((a, b) => a + b, 0) / prixM2Array.length;
 
-      metaDiv.innerHTML = `<strong>${localVentes.length}</strong> ventes comparables trouvées.`;
+      metaDiv.innerHTML = `<strong>${localVentes.length}</strong> ventes comparables.`;
       
       let html = `
         <div class="kpis">
           <div class="kpi"><div class="klabel">Prix m² moyen</div><div class="kvalue">${formatM2(moy)}</div></div>
-          <div class="kpi"><div class="klabel">Estimation conseillée</div><div class="kvalue">${formatEuro(moy * surfaceSaisie)}</div></div>
+          <div class="kpi"><div class="klabel">Estimation</div><div class="kvalue">${formatEuro(moy * surfaceSaisie)}</div></div>
         </div>
         <div class="tableWrap">
           <table>
-            <thead>
-              <tr><th>Date</th><th>Adresse</th><th>Surface</th><th>Prix</th><th>Dist.</th></tr>
-            </thead>
+            <thead><tr><th>Date</th><th>Adresse</th><th>Surface</th><th>Prix</th><th>Dist.</th></tr></thead>
             <tbody>
       `;
 
@@ -345,7 +314,6 @@ document.getElementById('formEstimation').addEventListener('submit', async funct
       html += `</tbody></table></div>`;
       resDiv.innerHTML = html;
 
-      // Mise à jour de la carte
       updateMap(lat, lon, rayonKm, localVentes);
     }
 
