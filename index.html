@@ -212,6 +212,7 @@
     padding:1.8rem 2.5rem;
     display:flex;align-items:center;justify-content:space-between;gap:1.2rem;flex-wrap:wrap;
   }
+  .cta-bottom-text{ flex: 1; min-width: 250px; }
   .cta-bottom-text h3{ font-size:18px;font-weight:800;margin-bottom:5px; }
   .cta-bottom-text p{ font-size:14px;color:var(--muted);line-height:1.5; }
   .cta-btns{ display:flex;gap:10px;flex-wrap:wrap; }
@@ -230,8 +231,6 @@
   }
   .cta-btn-outline:hover{ background:var(--pink);color:#fff; }
   .rgpd-bottom{ font-size:12px;color:var(--muted);line-height:1.5;padding:0 2.5rem 1.4rem; }
-
-  @keyframes spin{ to{ transform:rotate(360deg); } }
 </style>
 </head>
 
@@ -239,7 +238,6 @@
 <div class="wrap">
 
   <div id="etape1">
-
     <div class="hero">
       <div class="hero-bar"></div>
       <div class="hero-body">
@@ -299,11 +297,9 @@
         <div class="lead-reassurance">🔒 Accès immédiat · Aucun engagement · 100% gratuit</div>
       </form>
     </div>
-
   </div>
 
   <div id="simulateur">
-
     <div class="sim-welcome">
       <div class="sim-welcome-icon">
         <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg>
@@ -400,26 +396,24 @@
           <h3>Envie d'une estimation précise ?</h3>
           <p>Nathalie Chauvin se déplace sur place, analyse votre bien et vous donne une valeur réaliste — sans engagement.</p>
         </div>
-<div class="cta-btns">
-  <a class="cta-btn-pink" href="tel:+33778769838">
-    <svg style="width:16px;height:16px;fill:#fff;" viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"></path></svg>
-    Appeler Nathalie Chauvin
-  </a>
-  <a class="cta-btn-outline" href="https://card.pm/immo/nathalie.chauvin---26-ans-dexperience-dans-limmobilier" target="_blank">
-    Demander un rendez-vous
-  </a>
+        <div class="cta-btns">
+          <a class="cta-btn-pink" href="tel:+33778769838">
+            <svg style="width:16px;height:16px;fill:#fff;" viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"></path></svg>
+            Appeler Nathalie Chauvin
+          </a>
+          <a class="cta-btn-outline" href="https://card.pm/immo/nathalie.chauvin---26-ans-dexperience-dans-limmobilier" target="_blank">
+            Demander un rendez-vous
+          </a>
         </div>
       </div>
       <div class="rgpd-bottom">
         <strong>RGPD :</strong> ce simulateur ne stocke aucune information dans le navigateur. Géolocalisation via <em>api-adresse.data.gouv.fr</em>. Résultats indicatifs basés sur les données DVF publiques.
       </div>
     </div>
-
   </div>
 </div>
 
 <script>
-/* ── Formulaire lead → EMAILJS ── */
 document.getElementById('formLead').addEventListener('submit', function(e){
   e.preventDefault();
   const prenom = document.getElementById('leadPrenom').value.trim();
@@ -441,20 +435,12 @@ document.getElementById('formLead').addEventListener('submit', function(e){
   btn.disabled = true;
   btn.textContent = 'Connexion en cours...';
 
-  // Paramètres pour ton template EmailJS
-  const templateParams = {
-    prenom: prenom,
-    nom: nom,
-    email: email,
-    tel: tel
-  };
+  const templateParams = { prenom: prenom, nom: nom, email: email, tel: tel };
 
-  // ENVOI REEL
   emailjs.send("service_q8umvob", "template_l4c2098", templateParams)
     .then(function() {
       ok.style.display = 'block';
       document.getElementById('prenomAffiche').textContent = prenom;
-
       setTimeout(function(){
         document.getElementById('etape1').style.display = 'none';
         document.getElementById('simulateur').style.display = 'block';
@@ -463,13 +449,12 @@ document.getElementById('formLead').addEventListener('submit', function(e){
     }, function(error) {
       console.log('FAILED...', error);
       btn.disabled = false;
-      btn.textContent = 'Accéder au simulateur';
+      btn.textContent = 'Accéder au simulateur gratuitement';
       err.textContent = "Erreur d'envoi. Vérifiez votre connexion.";
       err.style.display = 'block';
     });
 });
 
-/* ── Type de bien ── */
 function onTypeChange(){
   const type = document.getElementById('type').value;
   const isMaison = type === 'Maison';
@@ -480,7 +465,6 @@ function onTypeChange(){
 }
 onTypeChange();
 
-/* ── Pills pièces ── */
 document.addEventListener('DOMContentLoaded', function(){
   const group = document.getElementById('piecesGroup');
   const pills = group.querySelectorAll('.checkpill');
